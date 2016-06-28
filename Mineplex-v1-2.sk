@@ -1,0 +1,1010 @@
+#                                                                                                                                       _..._       .-'''-.                                                                               
+#                                                                           .---.                                                    .-'_..._''.   '   _    \                                                       _______               
+#   __  __   ___   .--.   _..._         __.....__   _________   _...._      |   |      __.....__                                   .' .'      '.\/   /` '.   \  __  __   ___    __  __   ___                _..._   \  ___ `'.            
+#  |  |/  `.'   `. |__| .'     '.   .-''         '. \        |.'      '-.   |   |  .-''         '.                                / .'          .   |     \  ' |  |/  `.'   `. |  |/  `.'   `.            .'     '.  ' |--.\  \           
+#  |   .-.  .-.   '.--..   .-.   . /     .-''"'-.  `.\        .'```'.    '. |   | /     .-''"'-.  `.                             . '            |   '      |  '|   .-.  .-.   '|   .-.  .-.   '          .   .-.   . | |    \  '          
+#  |  |  |  |  |  ||  ||  '   '  |/     /________\   \\      |       \     \|   |/     /________\   \ ____     _____             | |            \    \     / / |  |  |  |  |  ||  |  |  |  |  |    __    |  '   '  | | |     |  '         
+#  |  |  |  |  |  ||  ||  |   |  ||                  | |     |        |    ||   ||                  |`.   \  .'    /             | |             `.   ` ..' /  |  |  |  |  |  ||  |  |  |  |  | .:--.'.  |  |   |  | | |     |  |    _    
+#  |  |  |  |  |  ||  ||  |   |  |\    .-------------' |      \      /    . |   |\    .-------------'  `.  `'    .'              . '                '-...-'`   |  |  |  |  |  ||  |  |  |  |  |/ |   \ | |  |   |  | | |     ' .'  .' |   
+#  |  |  |  |  |  ||  ||  |   |  | \    '-.____...---. |     |\`'-.-'   .'  |   | \    '-.____...---.    '.    .'                 \ '.          .              |  |  |  |  |  ||  |  |  |  |  |`" __ | | |  |   |  | | |___.' /'  .   | / 
+#  |__|  |__|  |__||__||  |   |  |  `.             .'  |     | '-....-'`    |   |  `.             .'     .'     `.                 '. `._____.-'/              |__|  |__|  |__||__|  |__|  |__| .'.''| | |  |   |  |/_______.'/ .'.'| |// 
+#                      |  |   |  |    `''-...... -'   .'     '.             '---'    `''-...... -'     .'  .'`.   `.                 `-.______ /                                               / /   | |_|  |   |  |\_______|/.'.'.-'  /  
+#                      |  |   |  |                  '-----------'                                    .'   /    `.   `.                        `                                                \ \._,\ '/|  |   |  |          .'   \_.'   
+#                      '--'   '--'                                                                  '----'       '----'                                                                         `--'  `" '--'   '--'                      
+#Mineplex Commands Remake
+#by Josh Roy (WheezyGold7931)
+#Enjoy!
+script options:
+	$ use permissions
+
+options:
+	prefix: &6[&5SkPerms&6]
+	maincolour: &6
+	secondcolour: &7
+	command: /permission
+	aliases: /perm, /mpperm, /perms
+	permission: mineplex.admin
+	
+	#CMD protection is basically extra security for your server. Only players inside of a list variable can use SkPerms
+	CMDprotection: false
+	CMDprotectionMsg: Unknown command. Type ""/help"" for help
+	#The player list is the list variable that contains players that can use SkPerms if CMDprotection is enabled
+	PlayerList: {example::players::*}
+	
+	UseChat: true #use prefix and suffix in the chat
+	#Chat types:
+	#Display - Changes the player's display name (Vault will hook if installed)
+	#Override - !COMING SOON
+	ChatType: "Display"
+	
+	version: 1.0.3
+
+function mcs(p: player , m: text) :: number:
+	if {mineplex.overidechat} is true:
+		if {mineplex.rank.%{_p}%} is not set:
+			set {mineplex.rank.%{_p}%} to ""
+			broadcast "%{mineplex.rank.%{_p}%}%&e%{_p}% &f%{_m}%"
+			return -1
+		else:
+			broadcast "%{mineplex.rank.%{_p}%}%&e%{_p}% &f%{_m}%"
+			return -1
+	else:
+		stop
+
+on join:
+	delete {mineplex.lastm.%player%}
+	wait 2.5 seconds
+	if {mineplex.vanish.%player%} is true:
+		send ""
+		send ""
+		send "&6&lYou are currently incognito"
+		send "&eThis means you are invisible to all excepet for those who are"
+		send "&4Admin&f+"
+		send ""
+		send ""
+	else:
+		stop
+
+on chat:
+	if {mineplex.vanish.%player%} is false:
+		if {mineplex.chatslow} is set:
+			if player has permission "mineplex.mod":
+				set {_check} to mcs((player), (message))
+				if {_check} is less than 0:
+					cancel event
+					delete {_check}
+			else:
+				if difference between {lastChat::%player%} and now < {mineplex.chatslow}:
+					cancel event
+					send "&9Chat> &7Chat slow enabled. Please wait."
+				else:	
+					set {lastChat::%player%} to now
+					set {_check} to mcs((player), (message))
+					if {_check} is less than 0:
+						cancel event
+						delete {_check}
+		else if {mineplex.chatsilence} is set:
+			if player has permission "mineplex.trainee":
+				set {_check} to mcs((player), (message))
+				if {_check} is less than 0:
+					cancel event
+					delete {_check}
+			else:
+				cancel event
+				send "&9Chat> &7The chat is silenced."
+		else:
+			if {party.%player%.chat} is true:
+				if length of message is greater than 1:
+					if first character of message is "@":
+						cancel event
+						set message to "%subtext of message from characters 2 to (length of message)%"
+						loop {party.%{party.%player%}%::*}:
+							message "&5&lParty &f&l%player% &d%message%" to loop-value
+					else:
+						set {_check} to mcs((player), (message))
+						if {_check} is less than 0:
+							cancel event
+							delete {_check}
+				else:
+					set {_check} to mcs((player), (message))
+					if {_check} is less than 0:
+						cancel event
+						delete {_check}
+			else:
+				set {_check} to mcs((player), (message))
+				if {_check} is less than 0:
+					cancel event
+					delete {_check}
+	else:
+		send "&eYou can not chat while incognito."
+
+command /mineplex-core <string> [<string>]:
+	usage: &9Do /mineplex-core help
+	permission: op
+	permission message: &9Permissions> &7This requires Permmission Rank [&9OP&7].
+	trigger:
+		if argument 1 is "help":
+			send "&9Plugin> &7Mineplex Core"
+			send "&9Plugin> &7by WheezyGold7931"
+			send ""
+			send "&9Mineplex Core> &7Listing Mineplex Core Options:"
+			send "&f/mineplex-core useChat (true/false): &eToggles this plugin to take overide the chat to mineplex's format."
+			send "&f/mineplex-core setAdmin (Player): &eGives the selected player admin perms (For all mineplex commands)"
+		else if argument 1 is "useChat":
+			if argument 2 is "true":
+				set {mineplex.overidechat} to true
+				send "&9Chat> &7Now using Mineplex Chat System (MCS)."
+			else:
+				set {mineplex.overidechat} to false
+				send "&9Chat> &7Now using Default Chat System (DCS)."
+		else if argument 1 is "setAdmin":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&4&lADMIN "
+				set {_mineplex.setadmin.temp} to "%arg-2%" parsed as player
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.trainee" to {_mineplex.setadmin.temp}'s permissions
+				add "mineplex.legend" to {_mineplex.setadmin.temp}'s permissions
+				add "mineplex.mod" to {_mineplex.setadmin.temp}'s permissions
+				add "mineplex.srmod" to {_mineplex.setadmin.temp}'s permissions
+				add "mineplex.admin" to {_mineplex.setadmin.temp}'s permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to Admin"
+
+on tab completer for "/mineplex-core":
+	add "help" to completions
+	add "useChat" to completions
+	add "setAdmin" to completions
+
+on damage:
+	cancel event
+
+command /a <text>:
+	trigger:
+		set {lasta} to "&a%{mineplex.rank.%player%}% %player% &d%arg-1%"
+		make all players execute command "/__mp__ca__"
+		send "%{lasta}%" to player
+
+command /ma [<player>] [<text>]:
+	trigger:
+		if player has permission "mineplex.trainee":
+			if argument 1 is set:
+				send "&d<-&6%player% &d%arg-2%" to arg-1
+				send "&d<-&6%player% &d%arg-2%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else:
+			send "&9Permissions> &7This requires Permmission Rank [&9TRAINEE&7]."
+			
+
+command /__mp__ca__:
+	trigger:
+		if player has permission "mineplex.trainee":
+			send "%{lasta}%" to player
+		else:
+			stop
+
+on any movement:
+	loop {rad::*}:
+		loop all players in radius 5 around loop-value:
+			if player is not "%loop-player%":
+				player has permission "mineplex.trainee":
+					stop
+				else:
+					push the loop-player upwards at speed .3
+					push the loop-player backwards at speed .5
+
+command /radius:
+	aliases: /ra
+	trigger:
+		if player has permission "mineplex.trainee":
+			if {mineplex.radius.%player%} is true:
+				remove player from {rad::*}
+				set {mineplex.radius.%player%} to false
+				send "&9Radius> &7Players will no longer be repelled from you."
+			else:
+				add player to {rad::*}
+				set {mineplex.radius.%player%} to true
+				send "&9Radius> &7Players will now repelled from you."
+		else:
+			send "&9Permissions> &7This requires Permmission Rank [&9TRAINEE&7]."
+
+command /vanish:
+	permission: mineplex.trainee
+	permission message: &9Permissions> &7This requires Permmission Rank [&9TRAINEE&7]. 
+	trigger:
+		if {mineplex.vanish.%player%} is true:
+			reveal player from all players
+			set {mineplex.vanish.%player%} to false
+			send "&9Incognito> &7You are no longer incognito. Your status will only change when you run &e/vanish &7again."
+		else:
+			hide player from all players
+			set {mineplex.vanish.%player%} to true
+			send "&9Incognito> &7You are now incognito. Your status will only change when you run &e/vanish &7again."
+			send ""
+			send ""
+			send "&6&lYou are currently incognito"
+			send "&eThis means you are invisible to all excepet for those who are"
+			send "&4Admin&f+"
+			send ""
+			send ""
+
+command /chatslow [<integer>]:
+	aliases: /cs
+	permission: mineplex.srmod
+	permission message: &9Permissions> &7This requires Permmission Rank [&9SR.MOD&7]. 
+	trigger:
+		if argument 1 is set:
+			if {mineplex.chatsilence} is set:
+				send "&9Chat> &7Chat is in silence mode. Disable silence mode to activate slow chat."
+				stop
+			else:
+				if {mineplex.chatslow} is not set:
+					set {mineplex.chatslow} to "%arg-2% seconds" parsed as timespan
+					send "&9Chat> &6%player% &7has set the chat dely to &6%arg-1%&7 seconds." to all players
+				else:
+					set {mineplex.chatslow} to "%arg-2% seconds" parsed as timespan
+					send "&9Chat> &6%player% &7has enabled chat slow." to all players
+					send "&9Chat> &6%player% &7has set the chat dely to &6%arg-1%&7 seconds." to all players
+		else:
+			if {mineplex.chatsilence} is set:
+				send "&9Chat> &7Chat is in silence mode. Disable silence mode to activate slow chat."
+				stop
+			else:
+				if {mineplex.chatslow} is set:
+					delete {mineplex.chatslow}
+					send "&9Chat> &6%player% &7has disabled chat slow." to all players
+				else:
+					send "&9Message> &cYou didn't enter a time limit! Defaulting to 10 seconds."
+					set {mineplex.chatslow} to "10 seconds" parsed as timespan
+					send "&9Chat> &6%player% &7has enabled chat slow." to all players
+					send "&9Chat> &6%player% &7has set the chat dely to &610 &7seconds." to all players
+command /silence:
+	permission: mineplex.admin
+	permission message: &9Permissions> &7This requires Permmission Rank [&9ADMIN&7].
+	trigger:
+		if {mineplex.chatslow} is set:
+			delete {mineplex.chatslow}
+			send "&9Chat> &6%player% &7has disabled chat slow." to all players
+			set {mineplex.chatsilence} to true
+			send "&9Chat> &7The chat has been silenced for Permanent." to all players
+			stop
+		if {mineplex.chatsilence} is set:
+			delete {mineplex.chatsilence}
+			send "&9Chat> &7The chat has been un-silenced." to all players
+		else:
+			set {mineplex.chatsilence} to true
+			send "&9Chat> &7The chat has been silenced for Permanent." to all players
+
+command /locate [<player>]:
+	aliases: /find
+	permission: mineplex.mod
+	permission message: &9Permissions> &7This requires Permmission Rank [&9MOD&7].
+	trigger:
+		if argument 1 is set:
+			set {_mineplex.locate.temp} to "%arg-1's world%"
+			send "&9Locate> &6%arg-1% &7is in the &6%{_mineplex.locate.temp}% &7Server."
+		else:
+			send "&9Message> &cErr...something went wrong?"
+
+command /tp [<player>] [<player>]:
+	permission: mineplex.mod
+	permission message: &9Permissions> &7This requires Permmission Rank [&9MOD&7].
+	trigger:
+		if argument 1 is set:
+			if argument 2 is set:
+				if player has permission "mineplex.admin":
+					teleport arg-1 to arg-2
+					send "&9Teleport> &7Teleported &6%arg-1% to &6%arg-2%&7."
+				else:
+					send "&9Permissions> &7This requires Permmission Rank [&9ADMIN&7]."
+			else:
+				teleport player to arg-1
+				send "&9Teleport> &7Teleported you to &6%arg-1%&7."
+		else:
+			send "&9Message> &cErr...something went wrong?"
+
+command /tphere [<player>]:
+	permission: mineplex.admin
+	permission message: &9Permissions> &7This requires Permmission Rank [&9ADMIN&7].
+	trigger:
+		if argument 1 is set:
+			teleport arg-1 to player
+			send "&9Teleport> &7Teleported &6%arg-1% &7to you."
+		else:
+			send "&9Message> &cErr...something went wrong?"
+
+command /updaterank [<string>] [<player>]:
+	permission: mineplex.admin
+	permission message: &9Permissions> &7This requires Permmission Rank [&9ADMIN&7].
+	trigger:
+		if argument 1 is not set:
+			send "&9Rank Update> &7Listing Rank Update Commands:"
+			send "&f/rankupdate <rank name> <player>: &eupdates chosen player's rank to the chosen rank"
+			send ""
+			send "&9Rank Update> &7Listing Rank List:"
+			send "&9Ranks> &7MEMBER"
+			send "&9Ranks> &7ULTRA"
+			send "&9Ranks> &7HERO"
+			send "&9Ranks> &7LEGEND"
+			send "&9Ranks> &7TITAN"
+			send "&9Ranks> &7TRAINEE"
+			send "&9Ranks> &7MOD"
+			send "&9Ranks> &7SRMOD"
+			send "&9Ranks> &7ADMIN"
+			send "&9Ranks> &7LEADER"
+			send "&9Ranks> &7OWNER"
+			send "&9Ranks> &7BUILDER"
+			send "&9Ranks> &7DEV"
+			send "&9Ranks> &7TWITCH"
+			send "&9Ranks> &7YOUTUBE"
+			send "&9Ranks> &7YT"
+		else if argument 1 is "MEMBER":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to ""
+				execute console command "/__mp__dp__ %arg-2%"
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "ULTRA":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&b&lULTRA "
+				execute console command "/__mp__dp__ %arg-2%"
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "HERO":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&d&lHERO "
+				execute console command "/__mp__dp__ %arg-2%"
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "LEGEND":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&a&lLEGEND "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.legend" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "TITAN":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&c&lTITAN "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.legend" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "TRAINEE":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&3&lTRAINEE "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.trainee" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "MOD":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&6&lMOD "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.trainee" to arg-2's permissions
+				add "mineplex.mod" to arg-2's permissions
+				add "mineplex.legend" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "SRMOD":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&6&lSR.MOD "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.trainee" to arg-2's permissions
+				add "mineplex.mod" to arg-2's permissions
+				add "mineplex.srmod" to arg-2's permissions
+				add "mineplex.legend" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "ADMIN":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&4&lADMIN "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.trainee" to arg-2's permissions
+				add "mineplex.legend" to arg-2's permissions
+				add "mineplex.mod" to arg-2's permissions
+				add "mineplex.srmod" to arg-2's permissions
+				add "mineplex.admin" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "LEADER":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&4&lLEADER "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.trainee" to arg-2's permissions
+				add "mineplex.mod" to arg-2's permissions
+				add "mineplex.srmod" to arg-2's permissions
+				add "mineplex.admin" to arg-2's permissions
+				add "mineplex.leader" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "OWNER":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&4&lOWNER "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.trainee" to arg-2's permissions
+				add "mineplex.mod" to arg-2's permissions
+				add "mineplex.srmod" to arg-2's permissions
+				add "mineplex.admin" to arg-2's permissions
+				add "mineplex.jrdev" to arg-2's permissions
+				add "mineplex.dev" to arg-2's permissions
+				add "mineplex.builder" to arg-2's permissions
+				add "mineplex.leader" to arg-2's permissions
+				add "mineplex.owner" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "BUILDER":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&1&lBUILDER "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.builder" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "DEV":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&4&lDEV "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.trainee" to arg-2's permissions
+				add "mineplex.mod" to arg-2's permissions
+				add "mineplex.srmod" to arg-2's permissions
+				add "mineplex.admin" to arg-2's permissions
+				add "mineplex.leader" to arg-2's permissions
+				add "mineplex.owner" to arg-2's permissions
+				add "mineplex.builder" to arg-2's permissions
+				add "mineplex.dev" to arg-2's permissions
+				add "mineplex.admin" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "TWITCH":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&5&lTWITCH "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.twitch" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "YOUTUBE":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&c&lYOUTUBE "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.youtube" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else if argument 1 is "YT":
+			if argument 2 is set:
+				set {mineplex.rank.%arg-2%} to "&5&lYT "
+				execute console command "/__mp__dp__ %arg-2%"
+				add "mineplex.youtube" to arg-2's permissions
+				send "&9Ranks> &7Set %arg-2%'s rank to %arg-1%"
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else:
+			send "&9Message> &cErr...something went wrong?"
+
+command /__mp__dp__ <player>:
+	trigger:
+		remove "mineplex.trainee" from arg-1's permissions
+		remove "mineplex.legend" from arg-1's permissions
+		remove "mineplex.mod" from arg-1's permissions
+		remove "mineplex.srmod" from arg-1's permissions
+		remove "mineplex.admin" from arg-1's permissions
+		remove "mineplex.leader" from arg-1's permissions
+		remove "mineplex.owner" from arg-1's permissions
+		remove "mineplex.dev" from arg-1's permissions
+		remove "mineplex.twitch" from arg-1's permissions
+		remove "mineplex.youtube" from arg-1's permissions
+		remove "mineplex.builder" from arg-1's permissions
+
+command /s [<text>]:
+	permission: mineplex.mod
+	permission message: &9Permissions> &7This requires Permmission Rank [&9MOD&7].
+	trigger:
+		if argument 1 is set:
+			broadcast "&f&l%player% &b&l%arg-1%"
+		else:
+			send "&9Broadcast> &7Corect Usage: /s <message>."
+
+command /gm [<player>]:
+	trigger:
+		if argument 1 is not set:
+			if player's gamemode is survival:
+				set the player's gamemode to creative
+				send "&9Game Mode> &7%player% Creative Mode: &aTrue"
+			else:
+				set the player's gamemode to survival
+				send "&9Game Mode> &7%player% Creative Mode: &cFalse"
+		else:
+			if arg-1's gamemode is survival:
+				set the arg-1's gamemode to creative
+				send "&9Game Mode> &7%arg-1% Creative Mode: &aTrue"
+			else:
+				set the arg-1's gamemode to survival
+				send "&9Game Mode> &7%arg-1% Creative Mode: &cFalse"
+
+command /message [<player>] [<text>]:
+	aliases: /tell, /m, /w
+	trigger:
+		if argument 1 is set:
+			if argument 2 is set:
+				send "&6&l%player% > %arg-1% &e&l%arg-2%"
+				send "&6&l%player% > %arg-1% &e&l%arg-2%" to arg-1
+				set {mineplex.lastm.%player%} to "%arg-1%" parsed as player
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else:
+			send "&9Message> &cErr...something went wrong?"
+
+command /ping:
+	trigger:
+		send "&9Ping> &7PONG!"
+
+command /r [<text>]:
+	aliases: /reply
+	trigger:
+		if {mineplex.lastm.%player%} is set:
+			if argument 1 is set:
+				send "&6&l%player% > %{mineplex.lastm.%player%}% &e&l%arg-1%"
+				send "&6&l%player% > %{mineplex.lastm.%player%}% &e&l%arg-1%" to {mineplex.lastm.%player%}
+			else:
+				send "&9Message> &cErr...something went wrong?"
+		else:
+			send "&9Message> &7You have not messaged anyone recently." 
+
+command /party [<string>] [<player>]:
+	aliases: /z
+	trigger:
+		if argument 1 is not set:
+			send "&9Party> &7Listing Party Commands:"
+			send "&f/party <Player>: &eJoin/Create/Invite Player"
+			send "&f/party leave: &eLeave your current party"
+			send "&f/party kick <Player>: &eKick player from your Party"
+			send "&f/party info: &eDisplays info on the current Party."
+		else:
+			if argument 1 is "kick":
+				if {party.%player%} is not set:
+					message "&9Party> &7You don't have a party"
+				else:
+					if {party.%player%} is not player:
+						message "&9Party> &7You have to be a party leader to do this"
+						stop	
+				if player arg is not set:
+					message "&9Party> &7Player needed. /party kick <player>"	
+				else:
+					if {party.%player%::*} doesn't contain player arg:
+						message "&9Party> &7The player needs to be in your party"
+						stop	
+					message "&9Party> &7You kicked %player arg% from the party"	
+					message "&9Party> &7You've been kicked by %player% from his party" to player arg
+					loop {party.%player%::*}:
+						if loop-value = player arg:
+							delete {party.%player%::%loop-index%}
+					delete {party.%player arg%}
+					delete {party.%player arg%.chat}
+			else if arg 1 is "leave":
+				if {party.%player%} is not set:
+					message "&9Party> &7You don't have a party"
+				else:
+					if {party.%player%} is player:
+						message "&9Party> &7You can't leave if you are the leader. Do /party disband"
+						stop
+					message "&9Party> &7You left your party"
+					message "&9Party> &7%player% left your party" to {party.%player%}
+					set {party.%player%.chat} to false
+					loop {party.%{party.%player%}%::*}:
+						if loop-value = player:
+							delete {party.%{party.%player%}%::%loop-index%}
+					delete {party.%player%}
+					delete {party.%player%.chat}
+			else if arg 1 is "disband":
+				if {party.%player%} is not set:
+					message "&9Party> &cYou don't have a party"
+				else:
+					if {party.%player%} is not player:
+						message "&9Party> &7You have to be a party leader to do this"
+						stop
+					message "&9Party> &7You disband your party"
+					loop {party.%player%::*}:
+						loop-value is not player:
+							message "&9Party> &7Your party has been disbanded" to loop-value
+						delete {party.%loop-value%.chat}
+						delete {party.%loop-value%}
+					delete {party.%player%}
+					delete {party.%player%.chat}
+					delete {party.%player%::*}
+			else if arg 1 is "info":
+				if {party.%player%} is not set:
+					message "&9Party> &7You don't have a party"
+				else:
+					message "&9Party> &7Party Details:"
+					message "Party Leader: &7%{party.%player%}%"
+					set {_partyMember} to ""
+					loop {party.%{party.%player%}%::*}:
+						set {_partyMember} to "%{_partyMember}% %loop-value%"
+					message "Your Party: &7%{_partyMember}%"
+			else:
+				set {_mineplex.last.party} to "%arg-1%" parsed as player
+				if {_mineplex.last.party} is online:
+					if {party.%player%} is set:
+						add {_mineplex.last.party} to {party.%player%::*}
+						set {party.%player%.chat} to true
+						set {party.%arg-1%.chat} to true
+						set {party.%{_mineplex.last.party}%} to player
+						message "&9Party> &7You invited %{_mineplex.last.party}% to the party."	
+					else:
+						set {party.%player%} to player
+						message "&9Party> &7Created a party."
+						add player to {party.%player%::*}
+						make player execute command "/party %arg-1%"
+				else:
+					send "&9Party> &7That player is not online."
+
+command /announce [<text>]:
+	permission: mineplex.admin
+	permission message: &9Permissions> &7This requires Permmission Rank [&9ADMIN&7].
+	trigger:
+		if argument 1 is set:
+			send player title "&eAnnouncement" with subtitle "&b%arg-1%" for 10 seconds
+			broadcast "&9Announcement> &b%arg-1%"
+		else:
+			send "&9Message> &cErr...something went wrong?"
+
+command /punish [<offline player>] [<text>]:
+	aliases: /p
+	permission: mineplex.trainee
+	permission message: &9Permissions> &7This requires Permmission Rank [&9TRAINEE&7].
+	trigger:
+		if args 1 is not set:
+			message "&9Punish> &7Please specifiy a user and a reason to punish!"
+			stop
+		if args 1 is set:
+			if args 2 is not set:
+				message "&9Punish> &7Please specifiy a reason to punish!"
+				stop
+			if args 2 is set:
+				open chest with 6 rows named "Punish" to player
+				format slot 11 of player with 1 of book and quill named "&9&lChat Offenses" to be unstealable
+				format slot 13 of player with 1 of hopper named "&9&lGameplay Offenses" to be unstealable
+				format slot 15 of player with 1 of diamond sword named "&9&lHacking Offenses" to be unstealable
+				format slot 17 of player with 1 of tnt named "&9&lUnban" with lore "&6&l> &7Do not unban without permission!" to close then run [execute player command "/__mp__ib__ %arg-1% 1"]
+				format slot 8 of player with 1 of nether star named "&9&lUnmute" with lore "&6&l> &7Do not unmute without permission!" to close then run [execute player command "/__mp__ib__ %arg-1% 2"]
+				format slot 20 of player with 1 of light green dye named "&a&lSeverity 1" with lore "&6&l> &7Spam, Caps, Rudeness (after written/verbal warning)" to close then run [execute player command "/__mp__ib__ %arg-1% 2"]
+				format slot 22 of player with 1 of light green dye named "&a&lSeverity 1" with lore "&6&l> &7Anticheat Triggering (after written/verbal warning)" to close then run [execute player command "/essentials:tempban %args 1% 1d %args 2%"]
+				format slot 24 of player with 1 of light green dye named "&a&lSeverity 1" with lore "&6&l> &7XRay, AutoClicker" to close then run [execute player command "/essentials:tempban %args 1% 7d %args 2%"]
+				format slot 29 of player with 1 of yellow dye named "&e&lSeverity 2" with lore "&6&l> &7Filter Bypass, Sexual Content, Abusive Behavior" to close then run [execute player command "/__mp__ib__ %arg-1% 2"]
+				format slot 31 of player with 1 of yellow dye named "&e&lSeverity 2" with lore "&6&l> &7Map Exploiting" to close then run [execute player command "/essentials:tempban %args 1% 4d %args 2%"]
+				format slot 33 of player with 1 of yellow dye named "&e&lSeverity 2" with lore "&6&l> &7Any Combat Hacks (non movement hacks)" to close then run [execute player command "/essentials:tempban %args 1% 14d %args 2%"]
+				format slot 38 of player with 1 of red dye named "&c&lSeverity 3" with lore "&6&l> &7Descrimination, DDOS/Death Threats, Revealing Personal Info, Advertising, Scamming, Impersonation, " to close then run [execute player command "/__mp__ib__ %arg-1% 2"]
+				format slot 40 of player with 1 of red dye named "&c&lSeverity 3" with lore "&6&l> &7Bug Exploiting" to close then run [execute player command "/essentials:tempban %args 1% 7d %args 2%"]
+				format slot 42 of player with 1 of red dye named "&c&lSeverity 3" with lore "&6&l> &7Any Movement Hacks" to close then run [execute player command "/essentials:tempban %args 1% 30d %args 2%"]
+				format slot 44 of player with 1 of book named "&4&lPerm Mute" with lore "&6&l> &7If previous sev 3 in the last month use this!" to close then run [execute player command "/__mp__ib__ %arg-1% 2"]
+				format slot 53 of player with 1 of redstone block named "&4&lPerm Ban" with lore "&6&l> &7If previous sev 3 ban within the last 3 months!" to close then run [execute player command "/essentials:ban %args 1% %args 2%"]
+
+command /__mp__ib__ <player> <integer>:
+	permission: mineplex.trainee
+	permission message: &9Permissions> &7This requires Permmission Rank [&9TRAINEE&7].
+	trigger:
+		if argument 2 is 1:
+			unban arg-1
+			send "&9Punish> &7Unbanned &6%arg-1%&7."
+		else if argument 2 is 2:
+			send "&9Mineplex Core> &7Comming Soon!"
+			send "&9Punish> &6%arg-1% &7has not been affected."
+		else if argument 2 is 3:
+			stop
+
+#skPerms by LimeGlass
+#Thanks for Letting Me Bake This In!
+on script load:
+	set {skperms::config::version} to yaml value "version" from file "../../SkPerms/config.yml"
+	if {skperms::config::version} is not set:
+		set {_c} to true
+		set yaml value "version" from file "../../SkPerms/config.yml" to "{@version}"
+	set {skperms::config::useYML} to yaml value "useYML" from file "../../SkPerms/config.yml"
+	if {skperms::config::useYML} is not set:
+		set {_c} to true
+		set yaml value "useYML" from file "../../SkPerms/config.yml" to false
+	else if {skperms::config::useYML} is true:
+		loop {skperms::players::*}:
+			set {skperms::player::%loop-value%::permissions::*} to yaml nodes with keys "players.%loop-value%.permissions" from file "../../SkPerms/players.yml"
+			if {skperms::player::%loop-value%::permissions::*} is not set:
+				loop {skperms::player::%loop-value%::permissions::*}:
+					add "%loop-value-2%" to yaml list "players.%loop-value-1%.permissions" from file "../../SkPerms/players.yml"
+	if {_c} is true:
+		execute console command "/sk reload SkPerms"
+on script stop:
+	loop {skperms::groups::*}:
+		if {skperms::group::%loop-value%::*} is not set:
+			loop {skperms::group::%loop-value-1%::permissions::*}:
+				loop {skperms::players::*}:
+					remove "%loop-value-2%" from {skperms::player::%loop-value-3%::permissions::*}
+			loop {skperms::players::*}:
+				remove "%loop-value-1%" from {skperms::player::%loop-value-2%::groups::*}
+				if {skperms::player::%loop-value-2%::groups::*} is not empty:
+					loop {skperms::player::%loop-value-2%::groups::*}:
+						loop {skperms::group::%loop-value-1%::permissions::*}:
+							set {_p} to "%loop-value-2%" parsed as player
+							add "%loop-value-4%" to {_p}'s permissions
+			remove "%loop-value%" from {skperms::groups::*}
+command {@command} [<text>] [<text>] [<text>] [<text>] [<text>]:
+	permission: {@permission}
+	aliases: {@aliases}
+	trigger:
+		if {@CMDprotection} is true:
+			if command sender is not console:
+				if {@PlayerList} doesn't contain player or "%player%":
+					message "{@CMDprotectionMsg}"
+					stop
+		if arg 1 is not set:
+			message ""
+			message "{@prefix} v{@version}:"
+			message "{@maincolour}{@command} deleteDefault"
+			message "{@secondcolour}Deletes default group setting (If set)"
+			message "{@maincolour}{@command} (d|default) (group)"
+			if {skperms::default} is set:
+				message "{@secondcolour}Set the default group {@maincolour}(&7%{skperms::default}%{@maincolour})"
+			else:
+				message "{@secondcolour}Set the default group"
+			message "{@maincolour}{@command} (p|player) (player) (add|remove|list) permission [permission]"
+			message "{@secondcolour}Add/remove/list a players permissions"
+			message "{@maincolour}{@command} (p|player) (player) (add|set|remove|list) group [group]"
+			message "{@secondcolour}Add/remove/set/list a players group"
+			message "{@maincolour}{@command} (g|group) (group) (add|remove|list) permission [permission]"
+			message "{@secondcolour}Add/remove/list a group permission"
+			message "{@maincolour}{@command} (g|group) (group) (add|remove|list) group [group]"
+			message "{@secondcolour}Add/remove/list a groups connected groups"
+			message "{@secondcolour}A group is created once it contains a permission"
+			message "{@maincolour}{@command} (g|group) (group) (prefix|suffix) set (text)"
+			message "{@secondcolour}Set a suffix or prefix to a group"
+			message ""
+		else if arg 1 is "deleteDefault":
+			delete {skperms::default}
+			message "{@prefix} {@maincolour}Removed default group (No group set)"
+		else if arg 1 is "d", "setdefault" or "default":
+			if arg 2 is set:
+				set {skperms::default} to "%arg 2%"
+				message "{@prefix} {@maincolour}Set default group to &l%arg 2%"
+			else:
+				message "{@prefix} {@maincolour}Error: Group not specified"
+		else if arg 1 is "p" or "player":
+			if arg 2 is not set:
+				message "{@prefix} {@maincolour}Error: Player not specified"
+			else if arg 2 is set:
+				if arg 3 is "a" or "add":
+					if arg 4 is "p", "permission" or "permissions":
+						if arg 5 is set:
+							if {skperms::groups::*} doesn't contain "%arg 2%":	
+								add "%arg 2%" to {skperms::groups::*}
+							set {_player} to arg 2 parsed as player
+							add "%arg 5%" to {_player}'s permissions
+							set {skperms::player::%arg 2%::permissions::*} to {_player}'s permissions
+							message "{@prefix} {@maincolour}Added %arg 5% to %arg 2%'s permissions"
+						else:
+							message "{@prefix} {@maincolour}Error: Permission not specified"
+					else if arg 4 is "g", "group" or "groups":
+						if arg 5 is set:
+							if {skperms::groups::*} doesn't contain "%arg 2%":	
+								add "%arg 2%" to {skperms::groups::*}
+							if {skperms::player::%arg 2%::groups::*} doesn't contain "%arg 5%":
+								add "%arg 5%" to {skperms::player::%arg 2%::groups::*}
+							else:
+								message "{@prefix} {@secondcolour}%arg 2% already has group %arg 5%"
+								stop
+							message "{@prefix} {@maincolour}Added %arg 2% to group %arg 5%"
+							if {@UseChat} is true:
+								if {@ChatType} is "Display" or "display":
+									loop all players where [{skperms::player::%player%::groups::*} contains "%arg 5%"]:
+										if {skperms::group::%arg 5%::prefix} is set:
+											if {skperms::group::%arg 5%::suffix} is set:
+												set loop-player's display name to coloured "%{skperms::group::%arg 5%::prefix}%%loop-player%%{skperms::group::%arg 5%::suffix}%"
+											else:
+												set loop-player's display name to coloured "%{skperms::group::%arg 5%::prefix}%%loop-player%"
+										else if {skperms::group::%arg 5%::suffix} is set:
+											set loop-player's display name to coloured "%loop-player%%{skperms::group::%arg 5%::suffix}%"
+										else:
+											set loop-player's display name to "%player%"
+									loop all players where [{skperms::player::%player%::groups::*} is not set]:
+										set loop-player's display name to "%player%"
+						else:
+							message "{@prefix} {@maincolour}Error: Group not specified"
+					else:
+						message "{@prefix} {@maincolour}Error: Type not specified"
+				else if arg 3 is "s" or "set":
+					if arg 4 is "g", "group" or "groups":
+						if arg 5 is set:
+							if {skperms::groups::*} doesn't contain "%arg 2%":	
+								add "%arg 2%" to {skperms::groups::*}
+							delete {skperms::player::%arg 2%::groups::*}
+							add "%arg 5%" to {skperms::player::%arg 2%::groups::*}
+							message "{@prefix} {@maincolour}Set %arg 2% to group %arg 5%"
+							if {@UseChat} is true:
+								if {@ChatType} is "Display" or "display":
+									loop all players where [{skperms::player::%player%::groups::*} contains "%arg 5%"]:
+										if {skperms::group::%arg 5%::prefix} is set:
+											if {skperms::group::%arg 5%::suffix} is set:
+												set loop-player's display name to coloured "%{skperms::group::%arg 5%::prefix}%%loop-player%%{skperms::group::%arg 5%::suffix}%"
+											else:
+												set loop-player's display name to coloured "%{skperms::group::%arg 5%::prefix}%%loop-player%"
+										else if {skperms::group::%arg 5%::suffix} is set:
+											set loop-player's display name to coloured "%loop-player%%{skperms::group::%arg 5%::suffix}%"
+										else:
+											set loop-player's display name to "%player%"
+									loop all players where [{skperms::player::%player%::groups::*} is not set]:
+										set loop-player's display name to "%player%"
+						else:
+							message "{@prefix} {@maincolour}Error: Group not specified"
+					else:
+						message "{@prefix} {@maincolour}Error: Type not specified"
+				else if arg 3 is "r" or "remove":
+					if arg 4 is "p", "permission" or "permissions":
+						if arg 5 is set:
+							set {_player} to arg 2 parsed as player
+							remove "%arg 5%" from {_player}'s permissions
+							set {skperms::player::%arg 2%::permissions::*} to {_player}'s permissions
+							message "{@prefix} {@maincolour}Removed %arg 5% from %arg 2%'s permissions"
+						else:
+							message "{@prefix} {@maincolour}Error: Permission not specified"
+					else if arg 4 is "g", "group" or "groups":
+						if arg 5 is set:
+							if {skperms::player::%arg 2%::groups::*} contains "%arg 5%":
+								remove "%arg 5%" from {skperms::player::%arg 2%::groups::*}
+								message "{@prefix} {@maincolour}Removed %arg 2% from group %arg 5%"
+								if {@UseChat} is true:
+									if {@ChatType} is "Display" or "display":
+										loop all players where [{skperms::player::%player%::groups::*} contains "%arg 5%"]:
+											if {skperms::group::%arg 5%::prefix} is set:
+												if {skperms::group::%arg 5%::suffix} is set:
+													set loop-player's display name to coloured "%{skperms::group::%arg 5%::prefix}%%loop-player%%{skperms::group::%arg 5%::suffix}%"
+												else:
+													set loop-player's display name to coloured "%{skperms::group::%arg 5%::prefix}%%loop-player%"
+											else if {skperms::group::%arg 5%::suffix} is set:
+												set loop-player's display name to coloured "%loop-player%%{skperms::group::%arg 5%::suffix}%"
+											else:
+												set loop-player's display name to "%player%"
+										loop all players where [{skperms::player::%player%::groups::*} is not set]:
+											set loop-player's display name to "%player%"
+							else:
+								message "{@prefix} {@maincolour}Error: Player %arg 2% doesn't have that group"
+						else:
+							message "{@prefix} {@maincolour}Error: Group not specified"
+					else:
+						message "{@prefix} {@maincolour}Error: Type not specified"
+				else if arg 3 is "l" or "list":
+					if arg 4 is "p", "permission" or "permissions":
+						set {_player} to arg 2 parsed as player
+						message "{@prefix} {@maincolour}%{_player}'s permissions%"
+					else if arg 4 is "g", "group" or "groups":
+						message "{@prefix} {@maincolour}%{skperms::player::%arg 2%::groups::*}%"
+					else:
+						message "{@prefix} {@maincolour}Error: Type not specified"
+		else if arg 1 is "g", "group" or "groups":
+			if arg 2 is not set:
+				message "{@prefix} {@maincolour}Error: Group not specified"
+			else if arg 2 is set:
+				if arg 3 is "a" or "add":
+					if arg 4 is "p", "permission" or "permissions":
+						if arg 5 is set:
+							if {skperms::groups::*} doesn't contain "%arg 2%":	
+								add "%arg 2%" to {skperms::groups::*}
+							add "%arg 5%" to {skperms::group::%arg 2%::permissions::*}
+							message "{@prefix} {@maincolour}Added %arg 5% to group %arg 2%'s permissions"
+							loop all players where [{skperms::player::%player%::groups::*} contains "%arg 2%"]:
+								loop {skperms::group::%arg 2%::permissions::*}:
+									add "%loop-value-2%" to loop-player's permissions
+						else:
+							message "{@prefix} {@maincolour}Error: Permission not specified"
+					else if arg 4 is "g", "group" or "groups":
+						if arg 5 is set:
+							if {skperms::groups::*} doesn't contain "%arg 2%":	
+								add "%arg 2%" to {skperms::groups::*}
+							loop {skperms::group::%arg 5%::permissions::*}:
+								add "%loop-value%" to {skperms::group::%arg 2%::permissions::*}
+							message "{@prefix} {@maincolour}Added %arg 5%'s permissions to group %arg 2%"
+							loop all players where [{skperms::player::%player%::groups::*} contains "%arg 2%"]:
+								loop {skperms::group::%arg 2%::permissions::*}:
+									add "%loop-value-2%" to loop-player's permissions
+						else:
+							message "{@prefix} {@maincolour}Error: Group not specified"
+					else:
+						message "{@prefix} {@maincolour}Error: Type not specified"
+				else if arg 3 is "r" or "remove":
+					if arg 4 is "p", "permission" or "permissions":
+						if arg 5 is set:
+							loop all players where [{skperms::player::%player%::groups::*} contains "%arg 2%"]:
+								loop {skperms::group::%arg 2%::permissions::*}:
+									remove "%loop-value-2%" from loop-player's permissions
+							remove "%arg 5%" from {skperms::group::%arg 2%::permissions::*}
+							message "{@prefix} {@maincolour}Removed %arg 5% from group %arg 2%'s permissions"
+							loop all players where [{skperms::player::%player%::groups::*} contains "%arg 2%"]:
+								loop {skperms::group::%arg 2%::permissions::*}:
+									add "%loop-value-2%" to loop-player's permissions
+						else:
+							message "{@prefix} {@maincolour}Error: Permission not specified"
+					else if arg 4 is "g", "group" or "groups":
+						if arg 5 is set:
+							loop all players where [{skperms::player::%player%::groups::*} contains "%arg 2%"]:
+								loop {skperms::group::%arg 2%::permissions::*}:
+									remove "%loop-value-2%" from loop-player's permissions
+							loop {skperms::group::%arg 5%::permissions::*}:
+								remove "%loop-value%" from {skperms::group::%arg 2%::permissions::*}
+								add 1 to {_l}
+							message "{@prefix} {@maincolour}Removed %{_l}% of %arg 5%'s permissions from group %arg 2%"
+							loop all players where [{skperms::player::%player%::groups::*} contains "%arg 2%"]:
+								loop {skperms::group::%arg 2%::permissions::*}:
+									add "%loop-value-2%" to loop-player's permissions
+						else:
+							message "{@prefix} {@maincolour}Error: Group not specified"
+					else:
+						message "{@prefix} {@maincolour}Error: Type not specified"
+				else if arg 3 is "l" or "list":
+					if arg 4 is "p", "permission" or "permissions":
+						message "{@prefix} {@maincolour}%{skperms::group::%arg 2%::permissions::*}%"
+					else:
+						message "{@prefix} {@maincolour}Error: Type not specified"
+				else if arg 3 is "prefix" or "suffix":
+					if arg 4 is "set":
+						if arg 5 is set:
+							set {skperms::group::%arg 2%::%arg 3%} to "%arg 5%"
+							message "{@prefix} {@maincolour}%arg 3% set to %arg 5%"
+							if {@UseChat} is true:
+								if {@ChatType} is "Display" or "display":
+									loop all players where [{skperms::player::%player%::groups::*} contains "%arg 5%"]:
+										if {skperms::group::%arg 5%::prefix} is set:
+											if {skperms::group::%arg 5%::suffix} is set:
+												set loop-player's display name to coloured "%{skperms::group::%arg 5%::prefix}%%loop-player%%{skperms::group::%arg 5%::suffix}%"
+											else:
+												set loop-player's display name to coloured "%{skperms::group::%arg 5%::prefix}%%loop-player%"
+										else if {skperms::group::%arg 5%::suffix} is set:
+											set loop-player's display name to coloured "%loop-player%%{skperms::group::%arg 5%::suffix}%"
+										else:
+											set loop-player's display name to "%player%"
+									loop all players where [{skperms::player::%player%::groups::*} is not set]:
+										set loop-player's display name to "%player%"
+						else:
+							message "{@prefix} {@maincolour}Prefix/Suffix not specified"
+					else:
+						message "{@prefix} {@maincolour}Error: Type not specified (Type ""set"")"
+on quit:
+	set {skperms::player::%player%::permissions::*} to player's permissions
+on join:
+	loop 2 times:
+		remove "%player%" from {skperms::players::*}
+	add "%player%" to {skperms::players::*}
+	loop {skperms::groups::*}:
+		if player has permission "skperms.group.%loop-value%":
+			if {skperms::player::%player%::groups::*} doesn't contain "%loop-value%":
+				add "%loop-value%" to {skperms::player::%player%::groups::*}
+	if {skperms::default} is set:
+		loop {skperms::group::%{skperms::default}%::permissions::*}:
+			add "%loop-value%" to player's permissions
+	loop {skperms::player::%player%::permissions::*}:
+		add "%loop-value%" to player's permissions
+	if {skperms::player::%player%::groups::*} is not empty:
+		loop {skperms::player::%player%::groups::*}:
+			loop {skperms::group::%loop-value%::permissions::*}:
+				add "%loop-value-2%" to player's permissions
+			if {@UseChat} is true:
+				if {@ChatType} is "Display" or "display":
+					if {skperms::group::%loop-index%::prefix} is set:
+						if {skperms::group::%loop-index%::suffix} is set:
+							set player's display name to coloured "%{skperms::group::%loop-index%::prefix}%%player%%{skperms::group::%loop-index%::suffix}%"
+						else:
+							set player's display name to coloured "%{skperms::group::%loop-index%::prefix}%%player%"
+					else if {skperms::group::%loop-index%::suffix} is set:
+						set player's display name to coloured "%player%%{skperms::group::%loop-index%::suffix}%"
+					else:
+						set player's display name to "%player%"
+				loop all players where [{skperms::player::%player%::groups::*} is not set]:
+					set loop-player's display name to "%player%"
