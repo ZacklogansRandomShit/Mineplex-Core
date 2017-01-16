@@ -1,16 +1,5 @@
-#                                                                                                                                       _..._       .-'''-.                                                                               
-#                                                                           .---.                                                    .-'_..._''.   '   _    \                                                       _______               
-#   __  __   ___   .--.   _..._         __.....__   _________   _...._      |   |      __.....__                                   .' .'      '.\/   /` '.   \  __  __   ___    __  __   ___                _..._   \  ___ `'.            
-#  |  |/  `.'   `. |__| .'     '.   .-''         '. \        |.'      '-.   |   |  .-''         '.                                / .'          .   |     \  ' |  |/  `.'   `. |  |/  `.'   `.            .'     '.  ' |--.\  \           
-#  |   .-.  .-.   '.--..   .-.   . /     .-''"'-.  `.\        .'```'.    '. |   | /     .-''"'-.  `.                             . '            |   '      |  '|   .-.  .-.   '|   .-.  .-.   '          .   .-.   . | |    \  '          
-#  |  |  |  |  |  ||  ||  '   '  |/     /________\   \\      |       \     \|   |/     /________\   \ ____     _____             | |            \    \     / / |  |  |  |  |  ||  |  |  |  |  |    __    |  '   '  | | |     |  '         
-#  |  |  |  |  |  ||  ||  |   |  ||                  | |     |        |    ||   ||                  |`.   \  .'    /             | |             `.   ` ..' /  |  |  |  |  |  ||  |  |  |  |  | .:--.'.  |  |   |  | | |     |  |    _    
-#  |  |  |  |  |  ||  ||  |   |  |\    .-------------' |      \      /    . |   |\    .-------------'  `.  `'    .'              . '                '-...-'`   |  |  |  |  |  ||  |  |  |  |  |/ |   \ | |  |   |  | | |     ' .'  .' |   
-#  |  |  |  |  |  ||  ||  |   |  | \    '-.____...---. |     |\`'-.-'   .'  |   | \    '-.____...---.    '.    .'                 \ '.          .              |  |  |  |  |  ||  |  |  |  |  |`" __ | | |  |   |  | | |___.' /'  .   | / 
-#  |__|  |__|  |__||__||  |   |  |  `.             .'  |     | '-....-'`    |   |  `.             .'     .'     `.                 '. `._____.-'/              |__|  |__|  |__||__|  |__|  |__| .'.''| | |  |   |  |/_______.'/ .'.'| |// 
-#                      |  |   |  |    `''-...... -'   .'     '.             '---'    `''-...... -'     .'  .'`.   `.                 `-.______ /                                               / /   | |_|  |   |  |\_______|/.'.'.-'  /  
-#                      |  |   |  |                  '-----------'                                    .'   /    `.   `.                        `                                                \ \._,\ '/|  |   |  |          .'   \_.'   
-#                      '--'   '--'                                                                  '----'       '----'                                                                         `--'  `" '--'   '--'                      
+#(Old ugly acci text here)
+#
 #Mineplex Core Remake
 #The best and only Mineplex Copy
 #by Josh Roy (WheezyGold7931)
@@ -21,7 +10,7 @@ script options:
 
 #This is SkPerms's Options (Dont Mess With IT!)
 options:
-	MCRVER: 1.6
+	MCRVER: 1.7
 	prefix: &6[&5SkPerms&6]
 	maincolour: &6
 	secondcolour: &7
@@ -54,13 +43,11 @@ function mcs(p: player , m: text) :: number:
 			set {mineplex.rank.%{_player}%} to ""
 		if {mineplex.level.%{_player}%} is not set:
 			set {mineplex.level.%{_player}%} to "&70"
-			replace all " fuck ", " bitch " and " ass " with "****" in {_m}
-			broadcast "%{mineplex.level.%{_player}%}% %{mineplex.rank.%{_player}%}%&e%{_player}% &f%{_m}%" to {_p}'s world
-			return -1
-		else:
-			replace all "fuck", "bitch" and "ass" with "****" in {_m}
-			broadcast "%{mineplex.level.%{_player}%}% %{mineplex.rank.%{_player}%}%&e%{_player}% &f%{_m}%" to {_p}'s world
-			return -1
+		replace all " fuck ", " bitch " and " ass " with "****" in {_m}
+		loop all players:
+			if {mineplex.pref.pc.%loop-player%} is true:
+				send "%{mineplex.level.%{_player}%}% %{mineplex.rank.%{_player}%}%&e%{_player}% &f%{_m}%" to loop-player
+		return -1
 	else:
 		stop
 
@@ -71,23 +58,81 @@ command /disguise [<string>] [<string>]:
 		if arg 1 is not set:
 			if {mineplex.disguise.%player%} is set:
 				send "&9Disguise> &7You are no longer disguised!"
+				execute console command "/ud %player%"
 				delete {mineplex.disguise.%player%}
 				set player tab name to "%{mineplex.rank.%player%}%&e%player%"
+				set {_br} to uncolored {mineplex.rank.%player%}
+				set {mineplex.api.displayrank.%player%} to "%{_br}%"
 			else:
 				send "&9Disguise> &7Command List:%nl%&4/disguise <player> &7Makes you appear as target player in chat and tab &4Admin"
 		else:
 			if {mineplex.disguise.%player%} is set:
 				send "&9Disguise> &7You are already disguised. Please undisguise by using /disguise"
 			else:
+				set {_n} to the length of arg 1
+				if {_n} is greater than 16:
+					send "&9Disguise> &7That disguise name is not permitted!"
+					stop
+				set {_p1} to "%arg-1%" parsed as offline player
+				if {_p1} has permission "mineplex.trainee" or "mineplex.youtube" or "mineplex.twitch":
+					send "&9Disguise> &7You may not disguise as people who are staff members, youtubers, and streamers."
+					stop
+				if {banned::%{_p1}%} or {muted::%{_p1}%} is set:
+					send "&9Disguise> &7You may not disguise as people who are muted or banned."
+					stop
 				send "&9Disguise> &7Disguise Active: &f%arg-1%"
+				if {mineplex.level.%arg-1%} is not set:
+					set {mineplex.level.%arg-1%} to "&70"
+				if {mineplex.rank.%arg-1%} is not set:
+					set {mineplex.rank.%arg-1%} to ""
+				execute console command "/odisguise %player% player %arg-1%"
 				set {mineplex.disguise.%player%} to "%arg-1%" parsed as offline player
 				set {_player} to arg 1
 				if {mineplex.rank.%{_player}%} is not set:
 					set {mineplex.rank.%{_player}%} to ""
 				set player tab name to "%{mineplex.rank.%{_player}%}%&e%arg-1%"
+				set {_br} to uncolored {mineplex.rank.%player%}
+				set {_dr} to uncolored {mineplex.rank.%{mineplex.disguise.%player%}%}
+				replace all " " in {_br} with ""
+				replace all " " in {_dr} with ""
+				if {_dr} is "":
+					set {_dr} to "No Rank"
+				set {mineplex.api.displayrank.%player%} to "%{_dr}% (%{_br}%)"
+
+on join:
+	wait 5 ticks
+	if {mineplex.disguise.%player%} is set:
+		set {_br} to uncolored {mineplex.rank.%player%}
+		set {_dr} to uncolored {mineplex.rank.%{mineplex.disguise.%player%}%}
+		replace all " " in {_br} with ""
+		replace all " " in {_dr} with ""
+		if {_dr} is "":
+			set {_dr} to "No Rank"
+		set {mineplex.api.displayrank.%player%} to "%{_dr}% (%{_br}%)"
+	else:
+		set {_br} to uncolored {mineplex.rank.%player%}
+		set {mineplex.api.displayrank.%player%} to "%{_br}%"
+
+command /debugapi [<string>] [<string>] [<string>]:
+	trigger:
+		if arg 1 is not set:
+			send "&9API> &7Mineplex Core API"
+			send "&9API> &7/debugapi (api name)"
+			send "&9API> &7Current API's; &adisplayrank"
+			send "&9API> &7Use /debugapi (api name) (player) to view a diffrent players's api"
+		else:
+			if arg 2 is set:
+				set {_p} to "%arg-2%"
+			else:
+				set {_p} to "%player%"
+			if arg 1 is "displayrank":
+				send "&9API> &7Raw API Output; &f%{mineplex.api.displayrank.%{_p}%}%"
+			else:
+				send "&9API> &7Invalid API!"
 
 on join:
 	delete {mineplex.disguise.%player%}
+	execute console command "/ud %player%"
 
 on connect:
 	if {banned::%player%} is true:
@@ -146,6 +191,7 @@ on join:
 		send ""
 		send ""
 	execute player command "/__mp__st__"
+	set tab header to "&f&lMineplex Network  &a%player's world%" and footer to "&fVisit &awww.mineplex.com &ffor News, Forums, and Shop" for player
 	if {mineplex.rank.%player%} is "&b&lULTRA ":
 		execute console command "/updaterank %player% ultra"
 		set player tab name to "&b&lULTRA &e%player%"
@@ -412,24 +458,32 @@ on load:
 
 command /a <text>:
 	trigger:
+		if {mineplex.disguise.%player%} is set:
+			set {_p} to {mineplex.disguise.%player%}
+		else:
+			set {_p} to player
 		if player has permission "mineplex.trainee":
 			loop all players:
 				if loop-player has permission "mineplex.trainee":
-					send "&a%{mineplex.rank.%player%}%%player% &d%arg-1%" to loop-player
+					send "&a%{mineplex.rank.%{_p}%}%%{_p}% &d%arg-1%" to loop-player
 		else:
-			send "&a%{mineplex.rank.%player%}% %player% &d%arg-1%"
+			send "&a%{mineplex.rank.%{_p}%}% %{_p}% &d%arg-1%"
 			loop all players:
 				if loop-player has permission "mineplex.trainee":
-					send "&a%{mineplex.rank.%player%}%%player% &d%arg-1%" to loop-player
+					send "&a%{mineplex.rank.%{_p}%}%%{_p}% &d%{_p}%" to loop-player
 
 command /ma [<player>] [<text>]:
 	trigger:
+		if {mineplex.disguise.%player%} is set:
+			set {_p} to {mineplex.disguise.%player%}
+		else:
+			set {_p} to player
 		if player has permission "mineplex.trainee":
 			if argument 1 is set:
-				send "&d<-&6%player% &d%arg-2%" to arg-1
+				send "&d<-&6%{_p}% &d%arg-2%" to arg-1
 				loop all players:
 					if loop-player has permission "mineplex.trainee":
-						send "&6%player% &d-> &6%arg-1% &d%arg-2%" to loop-player
+						send "%{mineplex.rank.%{_p}%}%%{_p}% &d-> %{mineplex.rank.%arg-1%}%%arg-1% &d%arg-2%" to loop-player
 			else:
 				send "&9Message> &cErr...something went wrong?"
 		else:
@@ -477,6 +531,10 @@ command /chatslow [<integer>]:
 	permission: mineplex.srmod
 	permission message: &9Permissions> &7This requires Permmission Rank [&9SR.MOD&7]. 
 	trigger:
+		if {mineplex.disguise.%player%} is set:
+			set {_p} to {mineplex.disguise.%player%}
+		else:
+			set {_p} to player
 		if argument 1 is set:
 			if {mineplex.chatsilence} is set:
 				send "&9Chat> &7Chat is in silence mode. Disable silence mode to activate slow chat."
@@ -484,11 +542,11 @@ command /chatslow [<integer>]:
 			else:
 				if {mineplex.chatslow} is not set:
 					set {mineplex.chatslow} to "%arg-2% seconds" parsed as timespan
-					send "&9Chat> &6%player% &7has set the chat dely to &6%arg-1%&7 seconds." to all players
+					send "&9Chat> &6%{_p}% &7has set the chat dely to &6%arg-1%&7 seconds." to all players
 				else:
 					set {mineplex.chatslow} to "%arg-2% seconds" parsed as timespan
-					send "&9Chat> &6%player% &7has enabled chat slow." to all players
-					send "&9Chat> &6%player% &7has set the chat dely to &6%arg-1%&7 seconds." to all players
+					send "&9Chat> &6%{_p}% &7has enabled chat slow." to all players
+					send "&9Chat> &6%{_p}% &7has set the chat dely to &6%arg-1%&7 seconds." to all players
 		else:
 			if {mineplex.chatsilence} is set:
 				send "&9Chat> &7Chat is in silence mode. Disable silence mode to activate slow chat."
@@ -496,12 +554,12 @@ command /chatslow [<integer>]:
 			else:
 				if {mineplex.chatslow} is set:
 					delete {mineplex.chatslow}
-					send "&9Chat> &6%player% &7has disabled chat slow." to all players
+					send "&9Chat> &6%{_p}% &7has disabled chat slow." to all players
 				else:
 					send "&9Message> &cYou didn't enter a time limit! Defaulting to 10 seconds."
 					set {mineplex.chatslow} to "10 seconds" parsed as timespan
-					send "&9Chat> &6%player% &7has enabled chat slow." to all players
-					send "&9Chat> &6%player% &7has set the chat dely to &610 &7seconds." to all players
+					send "&9Chat> &6%{_p}% &7has enabled chat slow." to all players
+					send "&9Chat> &6%{_p}% &7has set the chat dely to &610 &7seconds." to all players
 command /silence:
 	permission: mineplex.admin
 	permission message: &9Permissions> &7This requires Permmission Rank [&9ADMIN&7].
@@ -520,7 +578,7 @@ command /silence:
 			send "&9Chat> &7The chat has been silenced for Permanent." to all players
 
 command /locate [<string>]:
-	aliases: /find /where
+	aliases: /find, /where
 	permission: mineplex.mod
 	permission message: &9Permissions> &7This requires Permmission Rank [&9MOD&7].
 	trigger:
@@ -759,6 +817,10 @@ command /updaterank [<offline player>] [<string>]:
 				set {mineplex.rank.%arg-1%} to "&1&lSUPPORT "
 				execute console command "/__mp__dp__ %arg-1%"
 				add "mineplex.builder" to arg-1's permissions
+				add "mineplex.trainee" to arg-1's permissions
+				add "mineplex.mod" to arg-1's permissions
+				add "mineplex.srmod" to arg-1's permissions
+				add "mineplex.legend" to arg-1's permissions
 				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
 				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
 				set arg-1 tab name to "&1&lSUPPORT &e%arg-1%"
@@ -769,6 +831,10 @@ command /updaterank [<offline player>] [<string>]:
 				set {mineplex.rank.%arg-1%} to "&1&lMEDIA "
 				execute console command "/__mp__dp__ %arg-1%"
 				add "mineplex.builder" to arg-1's permissions
+				add "mineplex.trainee" to arg-1's permissions
+				add "mineplex.mod" to arg-1's permissions
+				add "mineplex.srmod" to arg-1's permissions
+				add "mineplex.legend" to arg-1's permissions
 				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
 				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
 				set arg-1 tab name to "&1&lMEDIA &e%arg-1%"
@@ -874,6 +940,21 @@ command /cosmetic-system <integer>:
 		if arg 1 is 1:
 			stop
 
+on load:
+	if {mineplex.gadget.enabled} is not set:
+		set {mineplex.gadget.enabled} to true
+
+command /gadget:
+	permission: mineplex.admin
+	permission message: &9Permissions> &7This requires Permmission Rank [&9ADMIN&7].
+	trigger:
+		if {mineplex.gadget.enabled} is true:
+			set {mineplex.gadget.enabled} to false
+			broadcast "&f&lGadgets/Mounts are now &c&lDisabled"
+		else:
+			set {mineplex.gadget.enabled} to true
+			broadcast "&f&lGadgets/Mounts are now &a&lEnabled"
+
 #command /chestmeup:
 #	trigger:
 #		give player chest named "&aCosmetic Menu"
@@ -882,8 +963,12 @@ command /s [<text>]:
 	permission: mineplex.mod
 	permission message: &9Permissions> &7This requires Permmission Rank [&9MOD&7].
 	trigger:
+		if {mineplex.disguise.%player%} is set:
+			set {_p} to {mineplex.disguise.%player%}
+		else:
+			set {_p} to player
 		if argument 1 is set:
-			broadcast "&f&l%player% &b%arg-1%"
+			broadcast "&f&l%{_p}% &b%arg-1%"
 		else:
 			send "&9Broadcast> &7Corect Usage: /s <message>."
 
@@ -891,13 +976,17 @@ command /gm [<player>]:
 	permission: mineplex.builder
 	permission message: &9Permissions> &7This requires Permission Rank [&9ADMIN&7].
 	trigger:
+		if {mineplex.disguise.%player%} is set:
+			set {_p} to {mineplex.disguise.%player%}
+		else:
+			set {_p} to player
 		if argument 1 is not set:
 			if player's gamemode is survival:
 				set the player's gamemode to creative
-				send "&9Game Mode> &7%player% Creative Mode: &aTrue"
+				send "&9Game Mode> &7%{_p}% Creative Mode: &aTrue"
 			else:
 				set the player's gamemode to survival
-				send "&9Game Mode> &7%player% Creative Mode: &cFalse"
+				send "&9Game Mode> &7%{_p}% Creative Mode: &cFalse"
 		else:
 			if arg-1's gamemode is survival:
 				set the arg-1's gamemode to creative
@@ -909,10 +998,17 @@ command /gm [<player>]:
 command /message [<player>] [<text>]:
 	aliases: /tell, /m, /w
 	trigger:
+		if {mineplex.disguise.%player%} is set:
+			set {_p} to {mineplex.disguise.%player%}
+		else:
+			set {_p} to player
 		if argument 1 is set:
 			if argument 2 is set:
-				send "&6&l%player% > %arg-1% &e&l%arg-2%"
-				send "&6&l%player% > %arg-1% &e&l%arg-2%" to arg-1
+				if {mineplex.pref.pm.%arg-1%} is false:
+					send "&d%arg-1% has private messaging disabled."
+					stop
+				send "&6&l%{_p}% > %arg-1% &e&l%arg-2%"
+				send "&6&l%{_p}% > %arg-1% &e&l%arg-2%" to arg-1
 				set {mineplex.lastm.%player%} to "%arg-1%" parsed as player
 			else:
 				send "&9Message> &cErr...something went wrong?"
@@ -1019,10 +1115,14 @@ command /news [<string>] [<string>] [<string>]:
 command /r [<text>]:
 	aliases: /reply
 	trigger:
+		if {mineplex.disguise.%player%} is set:
+			set {_p} to {mineplex.disguise.%player%}
+		else:
+			set {_p} to player
 		if {mineplex.lastm.%player%} is set:
 			if argument 1 is set:
-				send "&6&l%player% > %{mineplex.lastm.%player%}% &e&l%arg-1%"
-				send "&6&l%player% > %{mineplex.lastm.%player%}% &e&l%arg-1%" to {mineplex.lastm.%player%}
+				send "&6&l%{_p}% > %{mineplex.lastm.%player%}% &e&l%arg-1%"
+				send "&6&l%{_p}% > %{mineplex.lastm.%player%}% &e&l%arg-1%" to {mineplex.lastm.%player%}
 			else:
 				send "&9Message> &cErr...something went wrong?"
 		else:
@@ -1213,47 +1313,67 @@ command /__mp__warn__ <player> <player> <text>:
 		if executor is player:
 			stop
 		else:
-			send "&9Punish> &7%arg-2% issued a friendly warning to %arg-1%." to arg-1
+			if {mineplex.disguise.%arg-2%} is set:
+				set {_p} to {mineplex.disguise.%arg-2%}
+			else:
+				set {_p} to arg-2
+			send "&9Punish> &7%{_p}% issued a friendly warning to %arg-1%." to arg-1
 			send "&9Punish> &7&lReason: &7%arg-3%" to arg-1
 			loop all players:
 				if loop-player has permission "mineplex.trainee":
-					send "&9Punish> &7%arg-2% issued a friendly warning to %arg-1%." to loop-player
+					send "&9Punish> &7%{_p}% issued a friendly warning to %arg-1%." to loop-player
 
 command /__mp__ibm__ <text> <text> <text>:
 	trigger:
 		if executor is player:
 			send "Unknown command. Type ""help"" for help."
 			stop
+		if {mineplex.disguise.%arg-1%} is set:
+			set {_p} to {mineplex.disguise.%arg-1%}
+		else:
+			set {_p} to arg-1
 		loop all players:
 			if loop-player has permission "mineplex.trainee":
-				send "&9Punish> &7%arg-1% banned %arg-2% for %arg-3%." to loop-player
+				send "&9Punish> &7%{_p}% banned %arg-2% for %arg-3%." to loop-player
 
 command /__mp__imm__ <text> <text> <text>:
 	trigger:
 		if executor is player:
 			send "Unknown command. Type ""help"" for help."
 			stop
+		if {mineplex.disguise.%arg-1%} is set:
+			set {_p} to {mineplex.disguise.%arg-1%}
+		else:
+			set {_p} to arg-1
 		loop all players:
 			if loop-player has permission "mineplex.trainee":
-				send "&9Punish> &7%arg-1% muted %arg-2% for %arg-3%." to loop-player
+				send "&9Punish> &7%{_p}% muted %arg-2% for %arg-3%." to loop-player
 
 command /__mp__iubm__ <text> <text>:
 	trigger:
 		if executor is player:
 			send "Unknown command. Type ""help"" for help."
 			stop
+		if {mineplex.disguise.%arg-1%} is set:
+			set {_p} to {mineplex.disguise.%arg-1%}
+		else:
+			set {_p} to arg-1
 		loop all players:
 			if loop-player has permission "mineplex.trainee":
-				send "&9Punish> &7%arg-1% unbanned %arg-2%." to loop-player
+				send "&9Punish> &7%{_p}% unbanned %arg-2%." to loop-player
 
 command /__mp__iumm__ <text> <text>:
 	trigger:
 		if executor is player:
 			send "Unknown command. Type ""help"" for help."
 			stop
+		if {mineplex.disguise.%arg-1%} is set:
+			set {_p} to {mineplex.disguise.%arg-1%}
+		else:
+			set {_p} to arg-1
 		loop all players:
 			if loop-player has permission "mineplex.trainee":
-				send "&9Punish> &7%arg-1% ummuted %arg-2%." to loop-player
+				send "&9Punish> &7%{_p}% ummuted %arg-2%." to loop-player
 
 command /__mp__unban__ [<text>]:
 	trigger:
@@ -1445,20 +1565,63 @@ command /__mp__unmute__ [<text>]:
 		delete {muted::%{_player}%::*}
 		message "&4* &cYou have unbanned %{_player}%"
 
-on join:
+on join: #Handles Variabe Setup
 	if {mineplex.pref.hpv.%player%} is not set:
 		set {mineplex.pref.hpv.%player%} to true
+	if {mineplex.pref.pm.%player%} is not set:
+		set {mineplex.pref.pm.%player%} to true
+	if {mineplex.pref.pc.%player%} is not set:
+		set {mineplex.pref.pc.%player%} to true
+
+on join: #Handles Prefs Over Relog
+	if {mineplex.pref.hpv.%player%} is false:
+		hide all players from player
 
 command /prefs:
 	trigger:
+		set {_s} to "Steve" parsed as offline player
 		open chest with 6 rows named "         &nUser Preferences" to player
 		wait 1 tick
 		format slot 9 of player with fire charge named "&a&mHub Stacker" with lore "&7&mNull" to be unstealable
 		format slot 18 of player with gray dye named "&a&mHub Stacker" with lore "&7&mNull" to be unstealable
-		format slot 11 of player with eye of ender named "&aHub Player Visibility" with lore "&a%{mineplex.pref.hpv.%player%}%|| ||&fClick to Toggle" to be unstealable
-		format slot 20 of player with light green dye named "&aHub Player Visibility" with lore "&a%{mineplex.pref.hpv.%player%}%|| ||&fClick to Toggle" to be unstealable
-		format slot 13 of player with paper named "&aPlayer Chat" with lore "&a%{mineplex.pref.pc.%player%}%|| ||&fClick to Toggle" to be unstealable
-		format slot 22 of player with light green dye named "&aPlayer Chat" with lore "&a%{mineplex.pref.pc.%player%}%|| ||&fClick to Toggle" to be unstealable
+		format slot 11 of player with eye of ender named "&aHub Player Visibility" with lore "&a%{mineplex.pref.hpv.%player%}%|| ||&fClick to Toggle" to close then run [execute player command "/.prefs-system 1"]
+		format slot 20 of player with light green dye named "&aHub Player Visibility" with lore "&a%{mineplex.pref.hpv.%player%}%|| ||&fClick to Toggle" to close then run [execute player command "/.prefs-system 1"]
+		format slot 13 of player with paper named "&aPlayer Chat" with lore "&a%{mineplex.pref.pc.%player%}%|| ||&fClick to Toggle" to close then run [execute player command "/.prefs-system 2"]
+		format slot 22 of player with light green dye named "&aPlayer Chat" with lore "&a%{mineplex.pref.pc.%player%}%|| ||&fClick to Toggle" to close then run [execute player command "/.prefs-system 2"]
+		format slot 15 of player with empty map named "&aPrivate Messaging" with lore "&a%{mineplex.pref.pm.%player%}%|| ||&fClick to Toggle" to close then run [execute player command "/.prefs-system 3"]
+		format slot 24 of player with light green dye named "&aPrivate Messaging" with lore "&a%{mineplex.pref.pm.%player%}%|| ||&fClick to Toggle" to close then run [execute player command "/.prefs-system 3"]
+		format slot 17 of player with player's skull named "&a&mHub Party Requests" with lore "&7&mNull" to be unstealable
+		format slot 26 of player with gray dye named "&a&mHub Party Requests" with lore "&7&mNull" to be unstealable
+		format slot 40 of player with red flower named "&a&mShow Pending Friend Requests" with lore "&7&mNull" to be unstealable
+		format slot 49 of player with gray dye named "&a&mShow Pending Friend Requests" with lore "&7&mNull" to be unstealable
+		
+
+command /.prefs-system [<integer>]:
+	trigger:
+		if arg 1 is 1:
+			if {mineplex.pref.hpv.%player%} is true:
+				set {mineplex.pref.hpv.%player%} to false
+				hide all players from player
+			else:
+				set {mineplex.pref.hpv.%player%} to true
+				reveal all players from player
+				loop all players:
+					if {mineplex.vanish.%loop-player%} is true:
+						add loop-player to {%player%.vanishlist::*}
+				loop all players:
+					if loop-player does not have permission "mineplex.admin":
+						hide {%player%.vanishlist::*} from all players
+						delete {%player%.vanishlist::*}
+		else if arg 1 is 2:
+			if {mineplex.pref.pc.%player%} is true:
+				set {mineplex.pref.pc.%player%} to false
+			else:
+				set {mineplex.pref.pc.%player%} to true
+		else if arg 1 is 3:
+			if {mineplex.pref.pm.%player%} is true:
+				set {mineplex.pref.pm.%player%} to false
+			else:
+				set {mineplex.pref.pm.%player%} to true
 
 command /hostserver:
 	trigger:
@@ -1472,6 +1635,7 @@ command /fetchloc:
 	trigger:
 		set {_2} to location of player
 		send "%{_2}%"
+
 #skPerms by LimeGlass
 #Thanks for Letting Me Bake This In!
 on script load:
