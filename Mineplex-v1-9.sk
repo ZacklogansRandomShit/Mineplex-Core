@@ -9,8 +9,8 @@ script options:
 
 #Do not change these unless you want all hell to brake loose!
 options:
-	MCRVER: 1.7
-	configver: sailfish
+	MCRVER: 1.9
+	configver: granite
 
 #Functions
 
@@ -18,6 +18,14 @@ function configRefresh(n: number) :: number:
 	set {mineplex.config.config} to value "config" get of "plugins/Mineplex-Core-Remake/config.yml"
 	set {mineplex.config.servername} to value "servername" get of "plugins/Mineplex-Core-Remake/config.yml"
 	set {mineplex.config.website} to value "website" get of "plugins/Mineplex-Core-Remake/config.yml"
+	set {mineplex.config.appealwebsite} to value "appealwebsite" get of "plugins/Mineplex-Core-Remake/config.yml"
+
+function configPopulate(n: number) :: number:
+	create file "plugins/Mineplex-Core-Remake/config.yml"
+	set "config" to "{@configver}" in yaml file "plugins/Mineplex-Core-Remake/config.yml"
+	set "servername" to "MINEPLEX" in yaml file "plugins/Mineplex-Core-Remake/config.yml"
+	set "website" to "www.mineplex.com" in yaml file "plugins/Mineplex-Core-Remake/config.yml"
+	set "appealwebsite" to "www.mineplex.com/appeals" in yaml file "plugins/Mineplex-Core-Remake/config.yml"
 
 function updateRankAPI(p: player) :: player:
 	wait 5 ticks
@@ -58,19 +66,21 @@ function mcs(p: player , m: text) :: number:
 	else:
 		stop
 
-function gwenAlert(p: player , r: text) :: number:	
+function gwenAlert(p: player , r: text) :: number:
+	if {mineplex.disguise.%{_p}%} is set:
+		set  {_player} to {mineplex.disguise.%{_p}%}
+	else:
+		set {_player} to {_p}
 	loop all players:
 		if loop-player has permission "mineplex.trainee":
 			if {mineplex.pref.gwen.%loop-player%} is true:
-				send "&b&kK&r &c&lGWEN > &6%{_p}% &esuspected of &a%{_r}%&e." to loop-player
+				send "&b&kK&r &c&lGWEN > &6%{_player}% &esuspected of &a%{_r}%&e." to loop-player
 
 #Config Loading
 
 on load:
 	if file "plugins/Mineplex-Core-Remake/config.yml" doesn't exists:
-		set "config" to "{@configver}" in yaml file "plugins/Mineplex-Core-Remake/config.yml"
-		set "servername" to "MINEPLEX" in yaml file "plugins/Mineplex-Core-Remake/config.yml"
-		set "website" to "www.mineplex.com" in yaml file "plugins/Mineplex-Core-Remake/config.yml"
+		configPopulate(1)
 #	set {mineplex.config.servername} to colored value "servername" get of "plugins/Mineplex-Core-Remake/config.yml"
 	configRefresh(1)
 	wait 1 second
@@ -78,11 +88,15 @@ on load:
 		broadcast "&9Mineplex Core> &7Your Config is up to Date!"
 	else:
 		broadcast "&9Mineplex Core> &7Your Config is not up to Date! Updateing this shit for you!"
+		configPopulate(1)
+		broadcast "&9Mineplex Core> &7Config Re-Populated!"
+		broadcast "&9Mineplex Core> &7Going to reload plugin now!"
+		wait 1 second
+		execute console command "/sk reload all"
 	if {mineplex.usescoreboard} is not set:
 		set {mineplex.usescoreboard} to true
 
 #Main Command/Toggles
-
 command /mineplex-core <string> [<string>]:
 	usage: &9Do /mineplex-core help
 	permission: op
@@ -91,7 +105,7 @@ command /mineplex-core <string> [<string>]:
 		if argument 1 is "help":
 			send "&9Plugin> &7Mineplex Core"
 			send "&9Plugin> &7Running MCR: &e{@MCRVER}"
-			send "&9Plugin> &7by WheezyGold7931"
+			send "&9Plugin> &7by WheezyGold7931, LimeGlass, Citrin_, and HappyLuigit"
 			send ""
 			send "&9Mineplex Core> &7Listing Mineplex Core Options:"
 			send "&f/mineplex-core useChat (true/false): &eToggles this plugin to take overide the chat to mineplex's format."
@@ -641,7 +655,7 @@ command /mcr:
 	trigger:
 		send "&9Plugin> &7Mineplex Core"
 		send "&9Plugin> &7Running MCR: &e{@MCRVER}"
-		send "&9Plugin> &7by WheezyGold7931"
+		send "&9Plugin> &7by WheezyGold7931, LimeGlass, Citrin_, and HappyLuigi"
 
 command /a [<text>]:
 	aliases: /admin
@@ -724,11 +738,11 @@ command /chatslow [<integer>]:
 			else:
 				if {mineplex.chatslow} is not set:
 					set {mineplex.chatslow} to "%arg-2% seconds" parsed as timespan
-					send "&9Chat> &6%{_p}% &7has set the chat dely to &6%arg-1%&7 seconds." to all players
+					send "&9Chat> &6%{_p}% &7has set the chat delay to &6%arg-1%&7 seconds." to all players
 				else:
 					set {mineplex.chatslow} to "%arg-2% seconds" parsed as timespan
 					send "&9Chat> &6%{_p}% &7has enabled chat slow." to all players
-					send "&9Chat> &6%{_p}% &7has set the chat dely to &6%arg-1%&7 seconds." to all players
+					send "&9Chat> &6%{_p}% &7has set the chat delay to &6%arg-1%&7 seconds." to all players
 		else:
 			if {mineplex.chatsilence} is set:
 				send "&9Chat> &7Chat is in silence mode. Disable silence mode to activate slow chat."
@@ -741,7 +755,7 @@ command /chatslow [<integer>]:
 					send "&9Message> &cYou didn't enter a time limit! Defaulting to 10 seconds."
 					set {mineplex.chatslow} to "10 seconds" parsed as timespan
 					send "&9Chat> &6%{_p}% &7has enabled chat slow." to all players
-					send "&9Chat> &6%{_p}% &7has set the chat dely to &610 &7seconds." to all players
+					send "&9Chat> &6%{_p}% &7has set the chat delay to &610 &7seconds." to all players
 command /silence:
 	permission: mineplex.admin
 	permission message: &9Permissions> &7This requires Permmission Rank [&9ADMIN&7].
@@ -836,8 +850,8 @@ command /updaterank [<offline player>] [<string>]:
 			if argument 2 is set:   #These should now no longer mater so lel.
 				set {mineplex.rank.%arg-1%} to ""
 				execute console command "/__mp__dp__ %arg-1%"
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to None!"
+				send "&9Client Manager> &7Your rank has been updated to None!" to arg 1
 				set arg-1 tab name to "&e%arg-1%"
 			else:
 				send "&9Message> &cErr...something went wrong?"
@@ -845,8 +859,8 @@ command /updaterank [<offline player>] [<string>]:
 			if argument 2 is set:
 				set {mineplex.rank.%arg-1%} to "&b&lULTRA "
 				execute console command "/__mp__dp__ %arg-1%"
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Ultra!"
+				send "&9Client Manager> &7Your rank has been updated to Ultra!" to arg 1
 				set arg-1 tab name to "&b&lULTRA &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -855,8 +869,8 @@ command /updaterank [<offline player>] [<string>]:
 			if argument 2 is set:
 				set {mineplex.rank.%arg-1%} to "&d&lHERO "
 				execute console command "/__mp__dp__ %arg-1%"
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Hero!"
+				send "&9Client Manager> &7Your rank has been updated to Hero!" to arg 1
 				set arg-1 tab name to "&d&lHERO &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -866,8 +880,8 @@ command /updaterank [<offline player>] [<string>]:
 				set {mineplex.rank.%arg-1%} to "&a&lLEGEND "
 				execute console command "/__mp__dp__ %arg-1%"
 				add "mineplex.legend" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Legend!"
+				send "&9Client Manager> &7Your rank has been updated to Legend!" to arg 1
 				set arg-1 tab name to "&a&lLEGEND &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -877,8 +891,8 @@ command /updaterank [<offline player>] [<string>]:
 				set {mineplex.rank.%arg-1%} to "&c&lTITAN "
 				execute console command "/__mp__dp__ %arg-1%"
 				add "mineplex.legend" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Titan!"
+				send "&9Client Manager> &7Your rank has been updated to Titan!" to arg 1
 				set arg-1 tab name to "&c&lTITAN &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -888,8 +902,8 @@ command /updaterank [<offline player>] [<string>]:
 				set {mineplex.rank.%arg-1%} to "&3&lETERNAL "
 				execute console command "/__mp__dp__ %arg-1%"
 				add "mineplex.legend" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Eternal!"
+				send "&9Client Manager> &7Your rank has been updated to Eternal!" to arg 1
 				set arg-1 tab name to "&3&lETERNAL &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -899,8 +913,8 @@ command /updaterank [<offline player>] [<string>]:
 				set {mineplex.rank.%arg-1%} to "&6&lTRAINEE "
 				execute console command "/__mp__dp__ %arg-1%"
 				add "mineplex.trainee" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Trainee!"
+				send "&9Client Manager> &7Your rank has been updated to Trainee!" to arg 1
 				set arg-1 tab name to "&6&lTRAINEE &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -912,8 +926,8 @@ command /updaterank [<offline player>] [<string>]:
 				add "mineplex.trainee" to arg-1's permissions
 				add "mineplex.mod" to arg-1's permissions
 				add "mineplex.legend" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Mod!"
+				send "&9Client Manager> &7Your rank has been updated to Mod!" to arg 1
 				set arg-1 tab name to "&6&lMOD &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -926,8 +940,8 @@ command /updaterank [<offline player>] [<string>]:
 				add "mineplex.mod" to arg-1's permissions
 				add "mineplex.srmod" to arg-1's permissions
 				add "mineplex.legend" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Sr.Mod!"
+				send "&9Client Manager> &7Your rank has been updated to Sr.Mod!" to arg 1
 				set arg-1 tab name to "&6&lSR.MOD &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -940,8 +954,8 @@ command /updaterank [<offline player>] [<string>]:
 				add "mineplex.mod" to arg-1's permissions
 				add "mineplex.srmod" to arg-1's permissions
 				add "mineplex.legend" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to C.Mod!"
+				send "&9Client Manager> &7Your rank has been updated to C.Mod!" to arg 1
 				set arg-1 tab name to "&6&lC.MOD &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -956,8 +970,8 @@ command /updaterank [<offline player>] [<string>]:
 				add "mineplex.builder" to arg-1's permissions
 				add "mineplex.srmod" to arg-1's permissions
 				add "mineplex.admin" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Admin!"
+				send "&9Client Manager> &7Your rank has been updated to Admin!" to arg 1
 				set arg-1 tab name to "&4&lADMIN &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -972,8 +986,8 @@ command /updaterank [<offline player>] [<string>]:
 				add "mineplex.srmod" to arg-1's permissions
 				add "mineplex.admin" to arg-1's permissions
 				add "mineplex.leader" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Leader!"
+				send "&9Client Manager> &7Your rank has been updated to Leader!" to arg 1
 				set arg-1 tab name to "&4&lLEADER &e%arg-1%"
 			else:
 				send "&9Message> &cErr...something went wrong?"
@@ -990,8 +1004,8 @@ command /updaterank [<offline player>] [<string>]:
 				add "mineplex.builder" to arg-1's permissions
 				add "mineplex.leader" to arg-1's permissions
 				add "mineplex.owner" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Owner!"
+				send "&9Client Manager> &7Your rank has been updated to Owner!" to arg 1
 				set arg-1 tab name to "&4&lOWNER &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -1001,8 +1015,8 @@ command /updaterank [<offline player>] [<string>]:
 				set {mineplex.rank.%arg-1%} to "&9&lBUILDER "
 				execute console command "/__mp__dp__ %arg-1%"
 				add "mineplex.builder" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Builder!"
+				send "&9Client Manager> &7Your rank has been updated to Builder!" to arg 1
 				set arg-1 tab name to "&9&lBUIDLER &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -1016,8 +1030,8 @@ command /updaterank [<offline player>] [<string>]:
 				add "mineplex.mod" to arg-1's permissions
 				add "mineplex.srmod" to arg-1's permissions
 				add "mineplex.legend" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Support!"
+				send "&9Client Manager> &7Your rank has been updated to Support!" to arg 1
 				set arg-1 tab name to "&9&lSUPPORT &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -1031,8 +1045,8 @@ command /updaterank [<offline player>] [<string>]:
 				add "mineplex.mod" to arg-1's permissions
 				add "mineplex.srmod" to arg-1's permissions
 				add "mineplex.legend" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Media!"
+				send "&9Client Manager> &7Your rank has been updated to Media!" to arg 1
 				set arg-1 tab name to "&9&lMEDIA &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -1042,8 +1056,8 @@ command /updaterank [<offline player>] [<string>]:
 				set {mineplex.rank.%arg-1%} to "&9&lMAPLEAD "
 				execute console command "/__mp__dp__ %arg-1%"
 				add "mineplex.builder" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Maplead!"
+				send "&9Client Manager> &7Your rank has been updated to Maplead!" to arg 1
 				set arg-1 tab name to "&9&lMAPLEAD &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -1057,8 +1071,8 @@ command /updaterank [<offline player>] [<string>]:
 				add "mineplex.srmod" to arg-1's permissions
 				add "mineplex.builder" to arg-1's permissions
 				add "mineplex.jrdev" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Jr.Dev!"
+				send "&9Client Manager> &7Your rank has been updated to Jr.Dev!" to arg 1
 				set arg-1 tab name to "&c&lJR.DEV &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -1076,8 +1090,8 @@ command /updaterank [<offline player>] [<string>]:
 				add "mineplex.builder" to arg-1's permissions
 				add "mineplex.dev" to arg-1's permissions
 				add "mineplex.admin" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Dev!"
+				send "&9Client Manager> &7Your rank has been updated to Dev!" to arg 1
 				set arg-1 tab name to "&4&lDEV &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -1087,8 +1101,8 @@ command /updaterank [<offline player>] [<string>]:
 				set {mineplex.rank.%arg-1%} to "&5&lTWITCH "
 				execute console command "/__mp__dp__ %arg-1%"
 				add "mineplex.twitch" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Twitch!"
+				send "&9Client Manager> &7Your rank has been updated to Twitch!" to arg 1
 				set arg-1 tab name to "&5&lTWITCH &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -1098,8 +1112,8 @@ command /updaterank [<offline player>] [<string>]:
 				set {mineplex.rank.%arg-1%} to "&c&lYOUTUBE "
 				execute console command "/__mp__dp__ %arg-1%"
 				add "mineplex.youtube" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to Youtube!"
+				send "&9Client Manager> &7Your rank has been updated to Youtube!" to arg 1
 				set arg-1 tab name to "&c&lYOUTUBE &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -1109,8 +1123,8 @@ command /updaterank [<offline player>] [<string>]:
 				set {mineplex.rank.%arg-1%} to "&5&lYT "
 				execute console command "/__mp__dp__ %arg-1%"
 				add "mineplex.youtube" to arg-1's permissions
-				send "&9Client Manager> &7%arg-1%'s rank has been updated to %arg-2%!"
-				send "&9Client Manager> &7Your rank has been updated to %arg-2%!" to arg 1
+				send "&9Client Manager> &7%arg-1%'s rank has been updated to YT!"
+				send "&9Client Manager> &7Your rank has been updated to YT!" to arg 1
 				set arg-1 tab name to "&5&lYT &e%arg-1%"
 				updateRankAPI(arg-1)
 			else:
@@ -1572,12 +1586,12 @@ command /announce [<text>]:
 on connect:
 	if {banned::%player%} is true:
 		if {banned::%player%::type} is "perm":
-			kick player due to "&c&lYou are banned for Permanent%nl%&f%{banned::%player%::reason}%%nl%&2Unfairly banned? Appeal at &awww.mineplex.com/appeals"
+			kick player due to "&c&lYou are banned for Permanent%nl%&f%{banned::%player%::reason}%%nl%&2Unfairly banned? Appeal at &a%{mineplex.config.appealwebsite}%"
 			stop
 		if {banned::%player%::type} is "temp":		
 			set {_waited} to difference between {banned::%player%::when} and now
 			if {_waited} is less than {banned::%player%::time}:
-				kick player due to "&c&lYou are banned for %{banned::%player%::time}%%nl%&f%{banned::%player%::reason}%%nl%&2Unfairly banned? Appeal at &awww.mineplex.com/appeals"
+				kick player due to "&c&lYou are banned for %{banned::%player%::time}%%nl%&f%{banned::%player%::reason}%%nl%&2Unfairly banned? Appeal at &a%{mineplex.config.appealwebsite}%"
 
 command /punish [<offline player>] [<text>]:
 	aliases: /p
@@ -1601,13 +1615,13 @@ command /punish [<offline player>] [<text>]:
 					format slot 28 of player with dandelion yellow named "&a&lSeverity 2" with lore "&fMute Duration: &e1.0 Days||||&7Medium Spam||   &fSending the same message 6-20 times||||&7Medium Advertising:||   &f'join crap.server.net' - posted once||||&7Medium Abuse/Harassment||   &f'piss off you stupid newb'||   &f'SHIT ADMINS ARE SHIT!!!'||   &f'you're terrible, learn to play'||||&7Avoiding Chat Filter||   &f'F|_|<K YOU'" to close then run [do [execute console command "/__mp__tempmute__ %arg-1% 1 %player% %arg-2%"]->[execute console command "/__mp__imm__ %player% %arg-1% 1 day"]]
 					format slot 37 of player with rose red named "&a&lSeverity 3" with lore "&fMute Duration: &e30.0 Days||||&7Severe Spam||   &fSending the same message 20+ times||   &fOnly really used for a spam bot||||&7Severe Abuse/Harassment||   &f'go fucking die in a fire you fucking sack of shit'" to close then run [do [execute console command "/__mp__tempmute__ %arg-1% 30 %player% %arg-2%"]->[execute console command "/__mp__imm__ %player% %arg-1% 30 days"]]
 					format slot 12 of player with hopper named "&a&lGeneral Offense" with lore "&7Command/Map/Class/Skill exploits, etc" to be unstealable
-					format slot 21 of player with cactus green named "&a&lSeverity 1" with lore "&fBan Duration: &e4.0 Hours||||&7Team Killing||&f   Intentionally killing your team mates||||&7Trolling (Gameplay)||&f   Using abilities to trap players in spawn||||&7Map/Bug Exploiting||&f   Abusing an exploit to gain an advantage" to close then run [do [execute console command "/__mp__htempban__ %arg-1% 4 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 4 hours"]]
+					format slot 21 of player with cactus green named "&a&lSeverity 1" with lore "&fBan Duration: &e4.0 Hours||||&7Team Killing||&f   Intentionally killing your team mates||||&7Trolling (Gameplay)||&f   Using abilities to trap players in spawn||||&7Map/Bug Exploiting||&f   Abusing an exploit to gain an advantage" to close then run [do [execute console command "/__mp__htempban__ %arg-1% %player% 4 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 4 hours"]]
 					format slot 14 of player with iron sword named "&a&lClient Mod" with lore "&7X-ray, Forcefield, Speed, Fly, Inventory Hacks, etc" to be unstealable
-					format slot 23 of player with cactus green named "&a&lSeverity 1" with lore "&fBan Duration: &e1.0 Days||||&7Examples:||&f   Damage Indicators||&f   Player Radar" to close then run [do [execute console command "/__mp__tempban__ %arg-1% 1 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 1 day"]]
-					format slot 32 of player with dandelion yellow named "&a&lSeverity 2" with lore "&fBan Duration: &e30.0 Days||||&7Hacks:||   &fForcefield||   &fSpeed Hack||   &fReach Hack||   &fSpeed Hack||   &fOther Hack||||&7Hack Reports (SR & FR):||   &fForcefield||   &fSpeed Hack||   &fReach Hack||   &fSpeed Hack||   &fOther Hack||   &fFly Hack" to close then run [do [execute console command "/__mp__tempban__ %arg-1% 30 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 30 days"]]
-					format slot 41 of player with rose red named "&a&lSeverity 3" with lore "&fBan Duration: &e30.0 Days||||&7Hacks:||   &fFly Hack||||&c&lWARNING:||&cUse Severity 2 for Forum/Staff Reports" to close then run [do [execute console command "/__mp__tempban__ %arg-1% 30 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 30 days"]]
+					format slot 23 of player with cactus green named "&a&lSeverity 1" with lore "&fBan Duration: &e1.0 Days||||&7Examples:||&f   Damage Indicators||&f   Player Radar" to close then run [do [execute console command "/__mp__tempban__ %arg-1% %player% 1 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 1 day"]]
+					format slot 32 of player with dandelion yellow named "&a&lSeverity 2" with lore "&fBan Duration: &e30.0 Days||||&7Hacks:||   &fForcefield||   &fSpeed Hack||   &fReach Hack||   &fSpeed Hack||   &fOther Hack||||&7Hack Reports (SR & FR):||   &fForcefield||   &fSpeed Hack||   &fReach Hack||   &fSpeed Hack||   &fOther Hack||   &fFly Hack" to close then run [do [execute console command "/__mp__tempban__ %arg-1% %player% 30 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 30 days"]]
+					format slot 41 of player with rose red named "&a&lSeverity 3" with lore "&fBan Duration: &e30.0 Days||||&7Hacks:||   &fFly Hack||||&c&lWARNING:||&cUse Severity 2 for Forum/Staff Reports" to close then run [do [execute console command "/__mp__tempban__ %arg-1% %player% 30 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 30 days"]]
 					format slot 25 of player with paper named "&a&lWarning" with lore "||&7Example Warning Input:||&f   Spam - Repeatedly writing MEOW||&f   Swearing - Saying 'fuck' and 'shit'||&f   Hack Accusation - Accused Tomp13 of hacking||&f   Trolling - was trying to make bob angry in chat" to close then run [execute console command "/__mp__warn__ %arg-1% %player% %arg-2%"]
-					format slot 34 of player with redstone block named "&a&lPermanent Ban" with lore "&fBan Duration: &ePermanent||||&2Must supply a detailed reason for Ban." to close then run [do [execute console command "/__mp__ban__ %arg-1% %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% Permanent"]]
+					format slot 34 of player with redstone block named "&a&lPermanent Ban" with lore "&fBan Duration: &ePermanent||||&2Must supply a detailed reason for Ban." to close then run [do [execute console command "/__mp__ban__ %arg-1% %player% %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% Permanent"]]
 					format slot 43 of player with book and quill named "&a&lPermanent Mute" with lore "&fMute Duration: &ePermanent||||&7Severe Advertising:||&f   'JOIN MINECADE! THIS SUCKS!||&f   'join crap.server.net! FREE ADMIN!||||&2Must supply a detailed reason for Mute." to close then run [do [execute console command "/__mp__mute__ %arg-1% %player% %arg-2%"]->[execute console command "/__mp__imm__ %player% %arg-1% Permanent"]]
 					format slot 8 of player with shiny book and quill named "&a&lUnmute" with lore "&fUnmute Reason: &e%arg-2%" to close then run [do [execute console command "/__mp__iumm__ %player% %arg-1%"]->[execute console command "/__mp__unmute__ %arg-1%"]]
 					format slot 7 of player with shiny redstone block named "&a&lUnban" with lore "&fUnban Reason: &e%arg-2%" to close then run [do [execute console command "/__mp__unban__ %arg-1%"]->[execute console command "/__mp__iubm__ %player% %arg-1%"]]
@@ -1628,15 +1642,15 @@ command /punish [<offline player>] [<text>]:
 					format slot 10 of player with book and quill named "&a&lChat Offense" with lore "&7Verbal Abuse, Spam, Harrassment, Trolling, etc" to be unstealable
 					format slot 19 of player with cactus green named "&a&lSeverity 1" with lore "&fMute Duration: &e10.0 Hours||||&7Light Spam||&f   Sending the same message 2-5 times||||&7Light Advertising||&f   'anyone want to play on minecade?'||||&7Light Abuse/Harassment||&f   'you suck at this game'||||&7Hackusations||&f   'you're such a hacker!'||||&7Trolling||||&2Give Warning if 0 Past Offences and 0 Warnings." to close then run [do [execute console command "/__mp__htempmute__ %arg-1% 10 %player% %arg-2%"]->[execute console command "/__mp__imm__ %player% %arg-1% 10 hours"]]
 					format slot 28 of player with dandelion yellow named "&a&lSeverity 2" with lore "&fMute Duration: &e1.0 Days||||&7Medium Spam||   &fSending the same message 6-20 times||||&7Medium Advertising:||   &f'join crap.server.net' - posted once||||&7Medium Abuse/Harassment||   &f'piss off you stupid newb'||   &f'SHIT ADMINS ARE SHIT!!!'||   &f'you're terrible, learn to play'||||&7Avoiding Chat Filter||   &f'F|_|<K YOU'" to close then run [do [execute console command "/__mp__tempmute__ %arg-1% 1 %player% %arg-2%"]->[execute console command "/__mp__imm__ %player% %arg-1% 1 day"]]
-					format slot 37 of player with rose red named "&a&lSeverity 3" with lore "&fMute Duration: &e30.0 Days||||&7Severe Spam||   &fSending the same message 20+ times||   &fOnly really used for a spam bot||||&7Severe Abuse/Harassment||   &f'go fucking die in a fire you fucking sack of shit'" to close then run [do [execute console command "/__mp__tempmute__ %arg-1% 30 %player% %arg-2%"]->[execute console command "/__mp__imm__ %player% %arg-1% 30 days"]]
+					format slot 37 of player with rose red named "&a&lSeverity 3" with lore "&fMute Duration: &e30.0 Days||||&7Severe Spam||   &fSending the same message 20+ times||   &fOnly really used for a spam bot||||&7Severe Abuse/Harassment||   &f'go fucking die in a fire you fucking sack of shit'" to close then run [do [execute console command "/__mp__tempmute__ %arg-1% %player% 30 %player% %arg-2%"]->[execute console command "/__mp__imm__ %player% %arg-1% 30 days"]]
 					format slot 12 of player with hopper named "&a&lGeneral Offense" with lore "&7Command/Map/Class/Skill exploits, etc" to be unstealable
-					format slot 21 of player with cactus green named "&a&lSeverity 1" with lore "&fBan Duration: &e4.0 Hours||||&7Team Killing||&f   Intentionally killing your team mates||||&7Trolling (Gameplay)||&f   Using abilities to trap players in spawn||||&7Map/Bug Exploiting||&f   Abusing an exploit to gain an advantage" to close then run [do [execute console command "/__mp__htempban__ %arg-1% 4 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 4 hours"]]
+					format slot 21 of player with cactus green named "&a&lSeverity 1" with lore "&fBan Duration: &e4.0 Hours||||&7Team Killing||&f   Intentionally killing your team mates||||&7Trolling (Gameplay)||&f   Using abilities to trap players in spawn||||&7Map/Bug Exploiting||&f   Abusing an exploit to gain an advantage" to close then run [do [execute console command "/__mp__htempban__ %arg-1% %player% 4 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 4 hours"]]
 					format slot 14 of player with iron sword named "&a&lClient Mod" with lore "&7X-ray, Forcefield, Speed, Fly, Inventory Hacks, etc" to be unstealable
-					format slot 23 of player with cactus green named "&a&lSeverity 1" with lore "&fBan Duration: &e1.0 Days||||&7Examples:||&f   Damage Indicators||&f   Player Radar" to close then run [do [execute console command "/__mp__tempban__ %arg-1% 1 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 1 day"]]
-					format slot 32 of player with dandelion yellow named "&a&lSeverity 2" with lore "&fBan Duration: &e30.0 Days||||&7Hacks:||   &fForcefield||   &fSpeed Hack||   &fReach Hack||   &fSpeed Hack||   &fOther Hack||||&7Hack Reports (SR & FR):||   &fForcefield||   &fSpeed Hack||   &fReach Hack||   &fSpeed Hack||   &fOther Hack||   &fFly Hack" to close then run [do [execute console command "/__mp__tempban__ %arg-1% 30 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 30 days"]]
-					format slot 41 of player with rose red named "&a&lSeverity 3" with lore "&fBan Duration: &e30.0 Days||||&7Hacks:||   &fFly Hack||||&c&lWARNING:||&cUse Severity 2 for Forum/Staff Reports" to close then run [do [execute console command "/__mp__tempban__ %arg-1% 30 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 30 days"]]
+					format slot 23 of player with cactus green named "&a&lSeverity 1" with lore "&fBan Duration: &e1.0 Days||||&7Examples:||&f   Damage Indicators||&f   Player Radar" to close then run [do [execute console command "/__mp__tempban__ %arg-1% %player% 1 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 1 day"]]
+					format slot 32 of player with dandelion yellow named "&a&lSeverity 2" with lore "&fBan Duration: &e30.0 Days||||&7Hacks:||   &fForcefield||   &fSpeed Hack||   &fReach Hack||   &fSpeed Hack||   &fOther Hack||||&7Hack Reports (SR & FR):||   &fForcefield||   &fSpeed Hack||   &fReach Hack||   &fSpeed Hack||   &fOther Hack||   &fFly Hack" to close then run [do [execute console command "/__mp__tempban__ %arg-1% %player% 30 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 30 days"]]
+					format slot 41 of player with rose red named "&a&lSeverity 3" with lore "&fBan Duration: &e30.0 Days||||&7Hacks:||   &fFly Hack||||&c&lWARNING:||&cUse Severity 2 for Forum/Staff Reports" to close then run [do [execute console command "/__mp__tempban__ %arg-1% %player% 30 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 30 days"]]
 					format slot 25 of player with paper named "&a&lWarning" with lore "||&7Example Warning Input:||&f   Spam - Repeatedly writing MEOW||&f   Swearing - Saying 'fuck' and 'shit'||&f   Hack Accusation - Accused Tomp13 of hacking||&f   Trolling - was trying to make bob angry in chat" to close then run [execute console command "/__mp__warn__ %arg-1% %player% %arg-2%"]
-					format slot 34 of player with redstone block named "&a&lPermanent Ban" with lore "&fBan Duration: &ePermanent||||&2Must supply a detailed reason for Ban." to close then run [do [execute console command "/__mp__ban__ %arg-1% %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% Permanent"]]
+					format slot 34 of player with redstone block named "&a&lPermanent Ban" with lore "&fBan Duration: &ePermanent||||&2Must supply a detailed reason for Ban." to close then run [do [execute console command "/__mp__ban__ %arg-1% %player% %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% Permanent"]]
 					format slot 43 of player with book and quill named "&a&lPermanent Mute" with lore "&fMute Duration: &ePermanent||||&7Severe Advertising:||&f   'JOIN MINECADE! THIS SUCKS!||&f   'join crap.server.net! FREE ADMIN!||||&2Must supply a detailed reason for Mute." to close then run [do [execute console command "/__mp__mute__ %arg-1% %player% %arg-2%"]->[execute console command "/__mp__imm__ %player% %arg-1% Permanent"]]
 					if {banned::%arg-1%} is true:
 						if {banned::%arg-1%::type} is "perm":
@@ -1655,9 +1669,9 @@ command /punish [<offline player>] [<text>]:
 					format slot 10 of player with book and quill named "&a&lChat Offense" with lore "&7Verbal Abuse, Spam, Harrassment, Trolling, etc" to be unstealable
 					format slot 19 of player with cactus green named "&a&lSeverity 1" with lore "&fMute Duration: &e10.0 Hours||||&7Light Spam||&f   Sending the same message 2-5 times||||&7Light Advertising||&f   'anyone want to play on minecade?'||||&7Light Abuse/Harassment||&f   'you suck at this game'||||&7Hackusations||&f   'you're such a hacker!'||||&7Trolling||||&2Give Warning if 0 Past Offences and 0 Warnings." to close then run [do [execute console command "/__mp__htempmute__ %arg-1% 10 %player% %arg-2%"]->[execute console command "/__mp__imm__ %player% %arg-1% 10 hours"]]
 					format slot 12 of player with hopper named "&a&lGeneral Offense" with lore "&7Command/Map/Class/Skill exploits, etc" to be unstealable
-					format slot 21 of player with cactus green named "&a&lSeverity 1" with lore "&fBan Duration: &e4.0 Hours||||&7Team Killing||&f   Intentionally killing your team mates||||&7Trolling (Gameplay)||&f   Using abilities to trap players in spawn||||&7Map/Bug Exploiting||&f   Abusing an exploit to gain an advantage" to close then run [do [execute console command "/__mp__htempban__ %arg-1% 4 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 4 hours"]]
+					format slot 21 of player with cactus green named "&a&lSeverity 1" with lore "&fBan Duration: &e4.0 Hours||||&7Team Killing||&f   Intentionally killing your team mates||||&7Trolling (Gameplay)||&f   Using abilities to trap players in spawn||||&7Map/Bug Exploiting||&f   Abusing an exploit to gain an advantage" to close then run [do [execute console command "/__mp__htempban__ %arg-1% %player% 4 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 4 hours"]]
 					format slot 14 of player with iron sword named "&a&lClient Mod" with lore "&7X-ray, Forcefield, Speed, Fly, Inventory Hacks, etc" to be unstealable
-					format slot 23 of player with cactus green named "&a&lSeverity 1" with lore "&fBan Duration: &e1.0 Days||||&7Examples:||&f   Damage Indicators||&f   Player Radar" to close then run [do [execute console command "/__mp__tempban__ %arg-1% 1 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 1 day"]]
+					format slot 23 of player with cactus green named "&a&lSeverity 1" with lore "&fBan Duration: &e1.0 Days||||&7Examples:||&f   Damage Indicators||&f   Player Radar" to close then run [do [execute console command "/__mp__tempban__ %arg-1% %player% 1 %arg-2%"]->[execute console command "/__mp__ibm__ %player% %arg-1% 1 day"]]
 					format slot 25 of player with paper named "&a&lWarning" with lore "||&7Example Warning Input:||&f   Spam - Repeatedly writing MEOW||&f   Swearing - Saying 'fuck' and 'shit'||&f   Hack Accusation - Accused Tomp13 of hacking||&f   Trolling - was trying to make bob angry in chat" to close then run [execute console command "/__mp__warn__ %arg-1% %player% %arg-2%"]
 			
 
@@ -1740,7 +1754,7 @@ command /__mp__unban__ [<text>]:
 		delete {banned::%{_player}%::*}
 		message "&4* &cYou have unbanned %{_player}%"
 
-command /__mp__ban__ [<text>] [<text>]:
+command /__mp__ban__ [<text>] [<text>] [<text>]:
 	trigger:
 		if executor is player:
 			send "Unknown command. Type ""help"" for help."
@@ -1759,12 +1773,12 @@ command /__mp__ban__ [<text>] [<text>]:
 
 		set {banned::%{_player}%} to true
 		set {banned::%{_player}%::type} to "perm"
-		set {banned::%{_player}%::reason} to arg 2
+		set {banned::%{_player}%::reason} to arg 3
 		
-		kick {_player} due to "&c&lYou are banned for Permanent%nl%&f%{banned::%{_player}%::reason}%%nl%&2Unfairly banned? Appeal at &awww.mineplex.com/appeals"
+		kick {_player} due to "&c&lYou are banned for Permanent by %arg-2%%nl%&f%{banned::%{_player}%::reason}%%nl%&2Unfairly banned? Appeal at &a%{mineplex.config.appealwebsite}%"
 		
 		
-command /__mp__tempban__ [<text>] [<text>] [<text>]:
+command /__mp__tempban__ [<text>] [<text>] [<text>] [<text>]:
 	trigger:
 		if executor is player:
 			send "Unknown command. Type ""help"" for help."
@@ -1783,19 +1797,19 @@ command /__mp__tempban__ [<text>] [<text>] [<text>]:
 			stop
 			
 		set {_player} to arg 1 parsed as offlineplayer
-		set {_duration} to "%arg 2% days" parsed as timespan
+		set {_duration} to "%arg 3% days" parsed as timespan
 		
 		
 
 		set {banned::%{_player}%} to true
 		set {banned::%{_player}%::type} to "temp"
-		set {banned::%{_player}%::reason} to arg 3
+		set {banned::%{_player}%::reason} to arg 4
 		set {banned::%{_player}%::time} to {_duration}
 		set {banned::%{_player}%::when} to now
 		
-		kick {_player} due to "&c&lYou are banned for %{banned::%{_player}%::time}%%nl%&f%{banned::%{_player}%::reason}%%nl%&2Unfairly banned? Appeal at &awww.mineplex.com/appeals"
+		kick {_player} due to "&c&lYou are banned for %{banned::%{_player}%::time}% by %arg-2%%nl%&f%{banned::%{_player}%::reason}%%nl%&2Unfairly banned? Appeal at &a%{mineplex.config.appealwebsite}%"
 
-command /__mp__htempban__ [<text>] [<text>] [<text>]:
+command /__mp__htempban__ [<text>] [<text>] [<text>] [<text>]:
 	trigger:
 		if executor is player:
 			send "Unknown command. Type ""help"" for help."
@@ -1814,17 +1828,17 @@ command /__mp__htempban__ [<text>] [<text>] [<text>]:
 			stop
 			
 		set {_player} to arg 1 parsed as offlineplayer
-		set {_duration} to "%arg 2% hours" parsed as timespan
+		set {_duration} to "%arg 3% hours" parsed as timespan
 		
 		
 
 		set {banned::%{_player}%} to true
 		set {banned::%{_player}%::type} to "temp"
-		set {banned::%{_player}%::reason} to arg 3
+		set {banned::%{_player}%::reason} to arg 4
 		set {banned::%{_player}%::time} to {_duration}
 		set {banned::%{_player}%::when} to now
 		
-		kick {_player} due to "&c&lYou are banned for %{banned::%{_player}%::time}%%nl%&f%{banned::%{_player}%::reason}%%nl%&2Unfairly banned? Appeal at &awww.mineplex.com/appeals"
+		kick {_player} due to "&c&lYou are banned for %{banned::%{_player}%::time}% by %arg-2%%nl%&f%{banned::%{_player}%::reason}%%nl%&2Unfairly banned? Appeal at &a%{mineplex.config.appealwebsite}%"
 
 command /__mp__tempmute__ [<text>] [<text>] [<text>] [<text>]:
 	trigger:
@@ -2014,7 +2028,7 @@ on left click :
 		{autoclick.check} is true
 		add 1 to {player.click.%player%}
 		{player.click.%player%} > 15
-		gwenAlert((player), ("High CPS"))
+		gwenAlert((player), ("High CPS (%{player.click.%player%} / 3% cps)"))
 
 on damage of a player :
 	if {shield.toggle.akb} is false:
